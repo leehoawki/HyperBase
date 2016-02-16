@@ -1,6 +1,7 @@
 package com.toys.hyperbase.controller;
 
 import com.toys.hyperbase.model.Repository;
+import com.toys.hyperbase.model.Row;
 import com.toys.hyperbase.model.Table;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,10 +67,11 @@ public class ApiController {
     @RequestMapping(value = "{repository}/{table}/{key}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Table get(@PathVariable String repository, @PathVariable String table, @PathVariable String key) {
-        Table t = new Table();
-        t.setName(table);
-        return t;
+    Row get(@PathVariable String repository, @PathVariable String table, @PathVariable String key) {
+        Row r = new Row();
+        r.setKey(key);
+        r.setValue("0");
+        return r;
     }
 
 

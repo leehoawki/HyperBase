@@ -1,8 +1,7 @@
 package com.toys.hyperbase.controller;
 
-import com.toys.hyperbase.model.Repository;
-import com.toys.hyperbase.model.Row;
-import com.toys.hyperbase.model.Table;
+import com.toys.hyperbase.service.model.Row;
+import com.toys.hyperbase.service.model.Table;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,30 +16,8 @@ import java.util.List;
 @RequestMapping("/")
 public class ApiController {
 
-    @RequestMapping(value = "repositories", method = RequestMethod.GET)
-    public
-    @ResponseBody
-    List<Repository> getRepositories() {
-        List<Repository> list = new ArrayList<Repository>();
-        for (int i = 0; i < 3; i++) {
-            Repository repository = new Repository();
-            repository.setName(String.valueOf(i));
-            list.add(repository);
-        }
-        return list;
-    }
 
-    @RequestMapping(value = "{repository}", method = RequestMethod.GET)
-    public
-    @ResponseBody
-    Repository getRepository(@PathVariable String repository) {
-        Repository r = new Repository();
-        r.setName(repository);
-
-        return r;
-    }
-
-    @RequestMapping(value = "{repository}/tables", method = RequestMethod.GET)
+    @RequestMapping(value = "tables", method = RequestMethod.GET)
     public
     @ResponseBody
     List<Table> getTables() {
@@ -54,20 +31,20 @@ public class ApiController {
     }
 
 
-    @RequestMapping(value = "{repository}/{table}", method = RequestMethod.GET)
+    @RequestMapping(value = "{table}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Table getTable(@PathVariable String repository, @PathVariable String table) {
+    Table getTable(@PathVariable String table) {
         Table t = new Table();
         t.setName(table);
         return t;
     }
 
 
-    @RequestMapping(value = "{repository}/{table}/{key}", method = RequestMethod.GET)
+    @RequestMapping(value = "{table}/{key}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Row get(@PathVariable String repository, @PathVariable String table, @PathVariable String key) {
+    Row get(@PathVariable String table, @PathVariable String key) {
         Row r = new Row();
         r.setKey(key);
         r.setValue("0");
@@ -75,15 +52,8 @@ public class ApiController {
     }
 
 
-//    @RequestMapping(value = "{repository}", method = RequestMethod.POST)
-//    public
-//    @ResponseBody
-//    Repository updateRepository(@RequestBody Action action) {
 //
-//        return null;
-//    }
-//
-//    @RequestMapping(value = "{repository}/{table}", method = RequestMethod.POST)
+//    @RequestMapping(value = "{table}", method = RequestMethod.POST)
 //    public
 //    @ResponseBody
 //    Repository updateTable(@RequestBody Action action) {
@@ -91,7 +61,7 @@ public class ApiController {
 //        return null;
 //    }
 //
-//    @RequestMapping(value = "{repository}/{table}/{key}", method = RequestMethod.POST)
+//    @RequestMapping(value = "{table}/{key}", method = RequestMethod.POST)
 //    public
 //    @ResponseBody
 //    Repository update(@RequestBody Action action) {

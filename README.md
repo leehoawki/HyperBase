@@ -35,31 +35,21 @@ Visit [http://localhost:8080/HyperBase](http://localhost:8080/HyperBase) and you
 
 HyperBase provides a RESTful API that allows to query data using GET and update/delete data using POST in the repositories. 
 
-##### List repositories
-    GET:/api/repositories
-
-##### Query a repository details
-    GET:/api/[repository]
-
-##### List tables in a repository
-    GET:/api/[repository]/tables
+##### List tables
+    GET:/api/tables
 
 ##### Query a table details
-    GET:/api/[repository]/[table]
+    GET:/api/[table]
 
 ##### Query data in a table by a key
-    GET:/api/[repository]/[table]/[key]
-
-##### Create/Delete a repository
-    POST:/api/[repository]
-    data:action = create/delete
+    GET:/api/[table]/[key]
 
 ##### Create/Delete a table
-    POST:/api/[repository]/[table]
+    POST:/api/[table]
     data:action = create/delete
 
 ##### Update/Delete data in a table
-    POST:/api/[repository]/[table]/[key]
+    POST:/api/[table]/[key]
     data:action = update/delete
          val    = [val]
 

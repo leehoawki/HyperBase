@@ -1,6 +1,19 @@
 # HyperBase
 A zero configuration, non-distributed key-value store that runs in a servlet container.
 
+    ++++++++++++++++++++++++++++++++++++
+    |                                  |
+    |     Controller                   |
+    |         |                        |
+    |         V                        |
+    |      Service  ----->  Writer     |
+    |         |               |        |
+    |         V               V        |
+    |      RedoLog           File      |
+    |                                  |
+    ++++++++++++++++++++++++++++++++++++
+
+Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified ntities in memory will be sent to another writer thread to dump into a data file on disk.
 
 ## Building and Running
 

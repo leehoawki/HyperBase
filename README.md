@@ -14,7 +14,6 @@ A zero configuration, non-distributed key-value store that runs in a servlet con
     ++++++++++++++++++++++++++++++++++++
     
     Admin: An admin page where you can get some description/monitoring data and create/delete objects as you need.
-    Console: A command line interface under linux allowing you to access the server process.
 
 Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified entities in memory will be sent to another writer thread to dump into a data file on disk. Then it can restore itself after crash or shutdown using the snapshot on disk and the redo log.
 
@@ -30,7 +29,7 @@ Copy the war into Tomcat or any other servlet container you like and start it. O
 
     mvn jetty:run
 
-Visit <a href="http://localhost:8080/HyperBase">http://localhost:8080/HyperBase</a> and you should see the Admin page. 
+Visit [http://localhost:8080/HyperBase](http://localhost:8080/HyperBase) and you should see the Admin page. 
 
 ## API
 

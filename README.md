@@ -10,7 +10,9 @@ To build this project, you must have Maven installed.
     cd HyperBase
     mvn package 
 
-Copy the war into Tomcat or any other servlet container you like and start it.
+Copy the war into Tomcat or any other servlet container you like and start it. Or just using mvn jetty plugin to launch it.
+
+    mvn jetty:run
 
 Visit <a href="http://localhost:8080/HyperBase">http://localhost:8080/HyperBase</a> and you should see the Admin page. 
 

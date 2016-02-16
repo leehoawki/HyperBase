@@ -13,7 +13,7 @@ A zero configuration, non-distributed key-value store that runs in a servlet con
     |                                  |
     ++++++++++++++++++++++++++++++++++++
 
-Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified ntities in memory will be sent to another writer thread to dump into a data file on disk.
+Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified entities in memory will be sent to another writer thread to dump into a data file on disk. Then it can restore itself after crash or shutdown using the snapshot on disk and the redo log.
 
 ## Building and Running
 

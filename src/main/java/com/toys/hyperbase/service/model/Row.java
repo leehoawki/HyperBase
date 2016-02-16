@@ -5,6 +5,12 @@ package com.toys.hyperbase.service.model;
  */
 public class Row {
     String key;
+    
+    String value;
+
+    public Row() {
+
+    }
 
     public String getKey() {
         return key;
@@ -20,11 +26,5 @@ public class Row {
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    String value;
-
-    public Row() {
-
     }
 }

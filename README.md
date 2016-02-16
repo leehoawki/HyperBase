@@ -48,12 +48,11 @@ HyperBase provides a RESTful API that allows to query data using GET and update/
     POST:/api/[table]
     data:action = create/delete
 
-##### Update/Delete data in a table
+##### Update data in a table
     POST:/api/[table]/[key]
-    data:action = update/delete
-         val    = [val]
+    data:val = [val]
 
-
+Data will get removed after being updated as an empty string.
 
 ## TODO
 

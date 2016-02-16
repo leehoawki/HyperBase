@@ -1,13 +1,26 @@
 package com.toys.hyperbase.service;
 
+import com.toys.hyperbase.meta.Meta;
 import com.toys.hyperbase.service.model.Row;
 import com.toys.hyperbase.service.model.Table;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class HyperService {
+
+    static Logger LOG = Logger.getLogger(HyperService.class);
+
+    @Autowired
+    Meta meta;
+
+    public HyperService() {
+
+    }
+
     public List<Table> getTables() {
         //TODO
         return null;
@@ -19,19 +32,19 @@ public class HyperService {
     }
 
     public void createTable(String name) {
-
+        //TODO
     }
 
     public void deleteTable(String name) {
-
+        //TODO
     }
 
-    public Row get(String key){
+    public Row get(String table, String key) {
         //TODO
         return null;
     }
 
-    public void set(String key, String val) {
+    public void set(String table, String key, String val) {
         //TODO
     }
 }

@@ -1,8 +1,6 @@
 package com.toys.hyperbase.service.model;
 
-/**
- * Created by HaoQi on 2/16/2016.
- */
+
 public class Row {
     String key;
     

@@ -1,6 +1,6 @@
 package com.toys.hyperbase.service;
 
-import com.toys.hyperbase.meta.Meta;
+import com.toys.hyperbase.meta.MetaStore;
 import com.toys.hyperbase.service.model.Row;
 import com.toys.hyperbase.service.model.Table;
 import org.apache.log4j.Logger;
@@ -15,7 +15,7 @@ public class HyperService {
     static Logger LOG = Logger.getLogger(HyperService.class);
 
     @Autowired
-    Meta meta;
+    MetaStore metaStore;
 
     public HyperService() {
 

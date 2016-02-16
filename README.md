@@ -22,29 +22,32 @@ HyperBase provides a RESTful API that allows to query data using GET and update/
 
 ##### List repositories
     GET:/api/repositories
-    
-##### Create/Delete a repository
-    POST:/api/[repository]
-    data:action = create/delete
+
+##### Query a repository details
+    GET:/api/[repository]
 
 ##### List tables in a repository
     GET:/api/[repository]/tables
+
+##### Query a table details
+    GET:/api/[repository]/[table]
+
+##### Query data in a table by a key
+    GET:/api/[repository]/[table]/[key]
+
+##### Create/Delete a repository
+    POST:/api/[repository]
+    data:action = create/delete
 
 ##### Create/Delete a table
     POST:/api/[repository]/[table]
     data:action = create/delete
 
-##### Query data in a table
-    GET:/api/[repository]/[table]/[key]
-
-##### Update data in a table
+##### Update/Delete data in a table
     POST:/api/[repository]/[table]/[key]
-    data:action = update
+    data:action = update/delete
          val    = [val]
 
-##### Delete data in a table
-    POST:/api/[repository]/[table]/[key]
-    data:action = delete
 
 
 ## TODO

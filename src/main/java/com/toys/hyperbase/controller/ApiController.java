@@ -11,19 +11,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Controller
 @RequestMapping("/")
 public class ApiController {
-
-    @RequestMapping(value = "{repository}", method = RequestMethod.GET)
-    public
-    @ResponseBody
-    Repository getRepository(@PathVariable String repository) {
-        Repository r = new Repository();
-        r.setName(repository);
-
-        return r;
-    }
 
     @RequestMapping(value = "repositories", method = RequestMethod.GET)
     public
@@ -38,6 +29,30 @@ public class ApiController {
         return list;
     }
 
+    @RequestMapping(value = "{repository}", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    Repository getRepository(@PathVariable String repository) {
+        Repository r = new Repository();
+        r.setName(repository);
+
+        return r;
+    }
+
+    @RequestMapping(value = "{repository}/tables", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    List<Table> getTables() {
+        List<Table> list = new ArrayList<Table>();
+        for (int i = 0; i < 3; i++) {
+            Table t = new Table();
+            t.setName(String.valueOf(i));
+            list.add(t);
+        }
+        return list;
+    }
+
+
     @RequestMapping(value = "{repository}/{table}", method = RequestMethod.GET)
     public
     @ResponseBody
@@ -47,16 +62,40 @@ public class ApiController {
         return t;
     }
 
-    @RequestMapping(value = "{repository}/tables", method = RequestMethod.GET)
+
+    @RequestMapping(value = "{repository}/{table}/{key}", method = RequestMethod.GET)
     public
     @ResponseBody
-    List<Table> getTable() {
-        List<Table> list = new ArrayList<Table>();
-        for (int i = 0; i < 3; i++) {
-            Table t = new Table();
-            t.setName(String.valueOf(i));
-            list.add(t);
-        }
-        return list;
+    Table get(@PathVariable String repository, @PathVariable String table, @PathVariable String key) {
+        Table t = new Table();
+        t.setName(table);
+        return t;
     }
+
+
+//    @RequestMapping(value = "{repository}", method = RequestMethod.POST)
+//    public
+//    @ResponseBody
+//    Repository updateRepository(@RequestBody Action action) {
+//
+//        return null;
+//    }
+//
+//    @RequestMapping(value = "{repository}/{table}", method = RequestMethod.POST)
+//    public
+//    @ResponseBody
+//    Repository updateTable(@RequestBody Action action) {
+//
+//        return null;
+//    }
+//
+//    @RequestMapping(value = "{repository}/{table}/{key}", method = RequestMethod.POST)
+//    public
+//    @ResponseBody
+//    Repository update(@RequestBody Action action) {
+//
+//        return null;
+//    }
+
+
 }

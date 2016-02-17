@@ -1,8 +1,7 @@
-package com.toys.hyperbase.data;
+package hyperbase.data;
 
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 import org.junit.Test;
 
 public class HyperDataStoreTest extends TestCase {

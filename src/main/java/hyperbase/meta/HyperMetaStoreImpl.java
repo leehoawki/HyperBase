@@ -1,4 +1,4 @@
-package com.toys.hyperbase.meta;
+package hyperbase.meta;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Repository;

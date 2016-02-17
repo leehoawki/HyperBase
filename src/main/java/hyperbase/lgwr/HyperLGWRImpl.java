@@ -1,4 +1,4 @@
-package com.toys.hyperbase.lgwr;
+package hyperbase.lgwr;
 
 public class HyperLGWRImpl implements HyperLGWR {
 }

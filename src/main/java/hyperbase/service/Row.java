@@ -1,4 +1,4 @@
-package com.toys.hyperbase.service;
+package hyperbase.service;
 
 
 public class Row {

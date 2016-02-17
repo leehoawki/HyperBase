@@ -1,7 +1,7 @@
-package com.toys.hyperbase.data;
+package hyperbase.data;
 
 
-import com.toys.hyperbase.meta.Meta;
+import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 

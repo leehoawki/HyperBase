@@ -1,4 +1,4 @@
-package com.toys.hyperbase.data;
+package hyperbase.data;
 
 
 import java.io.Serializable;

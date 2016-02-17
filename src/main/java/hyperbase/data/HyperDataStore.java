@@ -1,4 +1,4 @@
-package com.toys.hyperbase.data;
+package hyperbase.data;
 
 
 public interface HyperDataStore {

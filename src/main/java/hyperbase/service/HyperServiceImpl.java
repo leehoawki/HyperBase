@@ -1,13 +1,12 @@
-package com.toys.hyperbase.service;
+package hyperbase.service;
 
-import com.toys.hyperbase.meta.HyperMetaStore;
-import com.toys.hyperbase.meta.Meta;
+import hyperbase.meta.HyperMetaStore;
+import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

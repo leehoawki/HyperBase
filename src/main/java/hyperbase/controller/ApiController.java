@@ -1,8 +1,8 @@
-package com.toys.hyperbase.controller;
+package hyperbase.controller;
 
-import com.toys.hyperbase.service.HyperService;
-import com.toys.hyperbase.service.Row;
-import com.toys.hyperbase.service.Table;
+import hyperbase.service.HyperService;
+import hyperbase.service.Row;
+import hyperbase.service.Table;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

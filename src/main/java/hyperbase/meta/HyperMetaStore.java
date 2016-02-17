@@ -1,4 +1,4 @@
-package com.toys.hyperbase.meta;
+package hyperbase.meta;
 
 import java.util.List;
 

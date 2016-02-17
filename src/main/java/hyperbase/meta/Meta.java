@@ -1,4 +1,4 @@
-package com.toys.hyperbase.meta;
+package hyperbase.meta;
 
 
 public class Meta {

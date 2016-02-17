@@ -2,11 +2,9 @@ package com.toys.hyperbase.meta;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Repository;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -32,7 +30,6 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
 
     @Override
     public synchronized void add(String name) {
-        long timestamp = new Date().getTime();
         Meta meta = new Meta(name);
         add(meta);
     }

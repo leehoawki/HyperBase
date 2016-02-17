@@ -1,7 +1,6 @@
 package com.toys.hyperbase.meta;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.lf5.util.Resource;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
@@ -18,10 +17,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
     String path;
 
     public HyperMetaStoreImpl() {
-        this(HyperMetaStoreImpl.class.getResource("/").getPath() + "data");
-    }
-
-    public HyperMetaStoreImpl(String path) {
+        this.path = HyperMetaStoreImpl.class.getResource("/").getPath() + "data";
         File dir = new File(path);
         if (!dir.exists()) {
             LOG.info(String.format("Data dir %s initializing. HyperBase metadata initialized.", path));
@@ -55,6 +51,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
             LOG.error(String.format("Datafile %s creation failed. Table adding failed.", name));
             throw new IllegalStateException(ex);
         }
+        LOG.info(String.format("Table %s created.", name));
     }
 
     @Override
@@ -65,6 +62,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
             throw new IllegalArgumentException(name);
         }
         f.delete();
+        LOG.info(String.format("Table %s deleted.", name));
     }
 
     @Override

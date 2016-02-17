@@ -1,8 +1,5 @@
 package com.toys.hyperbase.service;
 
-import com.toys.hyperbase.service.model.Row;
-import com.toys.hyperbase.service.model.Table;
-
 import java.util.List;
 
 public interface HyperService {

@@ -1,4 +1,4 @@
-package com.toys.hyperbase.service.model;
+package com.toys.hyperbase.service;
 
 
 public class Table {

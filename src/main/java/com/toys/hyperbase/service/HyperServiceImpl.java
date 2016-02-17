@@ -1,12 +1,12 @@
 package com.toys.hyperbase.service;
 
 import com.toys.hyperbase.meta.HyperMetaStore;
-import com.toys.hyperbase.service.model.Row;
-import com.toys.hyperbase.service.model.Table;
+import com.toys.hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,14 +23,21 @@ public class HyperServiceImpl implements HyperService {
 
     @Override
     public List<Table> getTables() {
-        //TODO
-        return null;
+        List<Table> tables = new ArrayList<Table>();
+        for (Meta m : metaStore.getAllMeta()) {
+            Table t = new Table();
+            t.setName(m.getName());
+            tables.add(t);
+        }
+        return tables;
     }
 
     @Override
     public Table getTable(String name) {
-        //TODO
-        return null;
+        Meta m = metaStore.getMeta(name);
+        Table t = new Table();
+        t.setName(m.getName());
+        return t;
     }
 
     @Override

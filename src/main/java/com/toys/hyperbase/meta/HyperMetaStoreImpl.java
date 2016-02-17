@@ -46,7 +46,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
         try {
             f.createNewFile();
         } catch (IOException ex) {
-            LOG.error(String.format("Datafile %s creation failed. Table adding failed.", name));
+            LOG.error(String.format("Datafile %s creation failed. Table adding failed.", name), ex);
             throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s created.", name));

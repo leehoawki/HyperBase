@@ -3,17 +3,15 @@ package com.toys.hyperbase.data;
 
 import com.toys.hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
+import org.springframework.util.StringUtils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.rmi.server.ExportException;
-import java.util.Date;
-import java.util.HashMap;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class HyperDataStoreImpl implements HyperDataStore {
 
@@ -21,23 +19,54 @@ public class HyperDataStoreImpl implements HyperDataStore {
 
     ConcurrentHashMap<String, Data> map;
 
-    ExecutorService queue = Executors.newSingleThreadExecutor();
+    Meta meta;
 
     public HyperDataStoreImpl(Meta meta) {
-        try {
-            FileInputStream fis = new FileInputStream(meta.getPath());
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            map = (ConcurrentHashMap) ois.readObject();
-            ois.close();
-            fis.close();
-        } catch (IOException ioe) {
-            LOG.error("");
-            throw new IllegalStateException();
-        } catch (ClassNotFoundException c) {
-            LOG.error("");
-            throw new IllegalStateException();
-        }
+        this.meta = meta;
+        load();
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                HyperDataStoreImpl.this.dump();
+            }
+        }, 0, 1, TimeUnit.HOURS);
     }
+
+    private void load() {
+        LOG.info(String.format("Table %s loading from %s in progress...", meta.getName(), meta.getPath()));
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(meta.getPath()));
+            map = new ConcurrentHashMap<String, Data>();
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] pair = StringUtils.split(line, ":");
+                map.put(pair[0], new Data(pair[0], pair[1]));
+            }
+            br.close();
+        } catch (Exception ex) {
+            LOG.error(String.format("Table %s loading error.", meta.getName()), ex);
+            throw new IllegalStateException(String.format("Table %s loading error."), ex);
+        }
+        LOG.info(String.format("Table %s loaded from %s.", meta.getName(), meta.getPath()));
+    }
+
+
+    private void dump() {
+        LOG.info(String.format("Table %s dumping to %s in progress...", meta.getName(), meta.getPath()));
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(meta.getPath()));
+            for (Data data : map.values()) {
+                bw.write(String.format("%s:%s", data.getKey(), data.getVal()));
+                bw.write("\n");
+            }
+            bw.close();
+        } catch (Exception ex) {
+            LOG.error(String.format("Table %s dumping error.", meta.getName()), ex);
+            throw new IllegalStateException(String.format("Table %s dumping error."), ex);
+        }
+        LOG.info(String.format("Table %s dumped to %s.", meta.getName(), meta.getPath()));
+    }
+
 
     @Override
     public void set(String key, String val) {

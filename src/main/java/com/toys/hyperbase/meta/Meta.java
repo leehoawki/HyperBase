@@ -4,12 +4,15 @@ package com.toys.hyperbase.meta;
 public class Meta {
     String name;
 
+    String path;
+
     public Meta() {
 
     }
 
-    public Meta(String name) {
+    public Meta(String name, String path) {
         this.name = name;
+        this.path = path;
     }
 
     public String getName() {
@@ -20,4 +23,11 @@ public class Meta {
         this.name = name;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
 }

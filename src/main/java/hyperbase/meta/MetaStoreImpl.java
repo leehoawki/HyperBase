@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-public class HyperMetaStoreImpl implements HyperMetaStore {
+public class MetaStoreImpl implements MetaStore {
 
-    static Logger LOG = Logger.getLogger(HyperMetaStoreImpl.class);
+    static Logger LOG = Logger.getLogger(MetaStoreImpl.class);
 
     String dirPath;
 
-    public HyperMetaStoreImpl() {
-        this(HyperMetaStoreImpl.class.getResource("/").getPath() + "/data");
+    public MetaStoreImpl() {
+        this(MetaStoreImpl.class.getResource("/").getPath() + "/data");
     }
 
-    public HyperMetaStoreImpl(String dirPath) {
+    public MetaStoreImpl(String dirPath) {
         this.dirPath = dirPath;
         File dir = new File(this.dirPath);
         if (!dir.exists()) {
@@ -34,9 +34,10 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
     }
 
     @Override
-    public synchronized void add(String name) {
+    public synchronized Meta add(String name) {
         Meta meta = new Meta(name, dirPath + "/" + name);
-        add(meta);
+        this.add(meta);
+        return meta;
     }
 
     @Override

@@ -1,27 +1,44 @@
 package hyperbase.service;
 
-import hyperbase.meta.HyperMetaStore;
+import hyperbase.data.Data;
+import hyperbase.data.DataStore;
+import hyperbase.data.DataStoreFactory;
+import hyperbase.meta.MetaStore;
 import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class HyperServiceImpl implements HyperService {
+public class HyperServiceImpl implements HyperService, InitializingBean {
 
     static Logger LOG = Logger.getLogger(HyperServiceImpl.class);
 
     @Autowired
-    HyperMetaStore metaStore;
+    MetaStore metaStore;
 
-    Map<String, HyperMetaStore> dataStores;
+    @Autowired
+    DataStoreFactory storeFactory;
+
+    Map<String, DataStore> dataStores;
 
     public HyperServiceImpl() {
 
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        dataStores = new HashMap<String, DataStore>();
+        for (Meta meta : metaStore.getAllMeta()) {
+            dataStores.put(meta.getName(), storeFactory.createStore(meta));
+        }
     }
 
     @Override
@@ -45,22 +62,31 @@ public class HyperServiceImpl implements HyperService {
 
     @Override
     public void createTable(String name) {
-        //TODO
+        Meta meta = metaStore.add(name);
+        dataStores.put(name, storeFactory.createStore(meta));
     }
 
     @Override
     public void deleteTable(String name) {
-        //TODO
+        dataStores.remove(name);
+        metaStore.delete(name);
     }
 
     @Override
     public Row get(String table, String key) {
-        //TODO
-        return null;
+        Data data = dataStores.get(table).get(key);
+        Row row = new Row();
+        row.setKey(key);
+        row.setValue(data.getVal());
+        return row;
     }
 
     @Override
     public void set(String table, String key, String val) {
-        //TODO
+        Data data = new Data();
+        data.setKey(key);
+        data.setVal(val);
+        DataStore store = dataStores.get(table);
+        store.set(data);
     }
 }

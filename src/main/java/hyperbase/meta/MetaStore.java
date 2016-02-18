@@ -3,8 +3,8 @@ package hyperbase.meta;
 import java.util.List;
 
 
-public interface HyperMetaStore {
-    public void add(String name);
+public interface MetaStore {
+    public Meta add(String name);
 
     public void add(Meta meta);
 

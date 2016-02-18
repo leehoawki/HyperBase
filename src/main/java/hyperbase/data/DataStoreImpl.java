@@ -5,26 +5,24 @@ import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class HyperDataStoreImpl implements HyperDataStore {
+public class DataStoreImpl implements DataStore {
 
-    static Logger LOG = Logger.getLogger(HyperDataStoreImpl.class);
+    static Logger LOG = Logger.getLogger(DataStoreImpl.class);
 
     ConcurrentHashMap<String, Data> map;
 
     Meta meta;
 
-    public HyperDataStoreImpl(Meta meta) {
+    public DataStoreImpl(Meta meta) {
         this.meta = meta;
-        load();
+        this.load();
     }
 
-    public synchronized void load() {
+    @Override
+    public void load() {
         LOG.info(String.format("Table %s loading from %s in progress...", meta.getName(), meta.getPath()));
         try {
             BufferedReader br = new BufferedReader(new FileReader(meta.getPath()));
@@ -42,23 +40,24 @@ public class HyperDataStoreImpl implements HyperDataStore {
         LOG.info(String.format("Table %s loaded from %s.", meta.getName(), meta.getPath()));
     }
 
-
-    public synchronized void dump() {
+    @Override
+    public void dump() {
         LOG.info(String.format("Table %s dumping to %s in progress...", meta.getName(), meta.getPath()));
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(meta.getPath()));
+            String tmpPath = meta.getPath() + ".tmp";
+            BufferedWriter bw = new BufferedWriter(new FileWriter(tmpPath));
             for (Data data : map.values()) {
                 bw.write(String.format("%s:%s", data.getKey(), data.getVal()));
                 bw.write("\n");
             }
             bw.close();
+            new File(tmpPath).renameTo(new File(meta.getPath()));
         } catch (Exception ex) {
             LOG.error(String.format("Table %s dumping error.", meta.getName()), ex);
             throw new IllegalStateException(String.format("Table %s dumping error."), ex);
         }
         LOG.info(String.format("Table %s dumped to %s.", meta.getName(), meta.getPath()));
     }
-
 
     @Override
     public void set(String key, String val) {

@@ -6,10 +6,13 @@ A zero configuration, non-distributed key-value store that runs in a servlet con
     |     Controller                   |
     |         |                        |
     |         V                        |
-    |      Service  ----->  Writer     |
+    |      Service   --->   DBWR       |
     |         |               |        |
     |         V               V        |
-    |      RedoLog           File      |
+    |       LGWR           DataFile    |
+    |         |                        |
+    |         V                        |
+    |      RedoLog                     |
     |                                  |
     ++++++++++++++++++++++++++++++++++++
     

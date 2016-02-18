@@ -20,6 +20,7 @@ public class MetaStoreImpl implements MetaStore {
     }
 
     public MetaStoreImpl(String dirPath) {
+        LOG.info(String.format("Meta Store initializing from %s", dirPath));
         this.dirPath = dirPath;
         File dir = new File(this.dirPath);
         if (!dir.exists()) {
@@ -46,7 +47,7 @@ public class MetaStoreImpl implements MetaStore {
         File f = new File(dirPath + "/" + name);
         if (f.exists()) {
             LOG.error(String.format("Table %s already exists. Table adding failed.", name));
-            throw new IllegalArgumentException(name);
+            throw new IllegalArgumentException(String.format("Table %s already exists. Table adding failed.", name));
         }
         try {
             f.createNewFile();
@@ -62,7 +63,7 @@ public class MetaStoreImpl implements MetaStore {
         File f = new File(dirPath + "/" + name);
         if (!f.exists()) {
             LOG.error(String.format("Table %s does not exist. Table adding failed.", name));
-            throw new IllegalArgumentException(name);
+            throw new IllegalArgumentException(String.format("Table %s does not exist. Table adding failed.", name));
         }
         f.delete();
         LOG.info(String.format("Table %s deleted.", name));

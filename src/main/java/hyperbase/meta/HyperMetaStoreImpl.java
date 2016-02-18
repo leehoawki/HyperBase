@@ -13,32 +13,36 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
 
     static Logger LOG = Logger.getLogger(HyperMetaStoreImpl.class);
 
-    String dir;
+    String dirPath;
 
     public HyperMetaStoreImpl() {
-        this.dir = HyperMetaStoreImpl.class.getResource("/").getPath() + "/data";
-        File dir = new File(this.dir);
+        this(HyperMetaStoreImpl.class.getResource("/").getPath() + "/data");
+    }
+
+    public HyperMetaStoreImpl(String dirPath) {
+        this.dirPath = dirPath;
+        File dir = new File(this.dirPath);
         if (!dir.exists()) {
-            LOG.info(String.format("Data dir %s initializing. HyperBase metadata initialized.", this.dir));
+            LOG.info(String.format("Data dirPath %s initializing. HyperBase metadata initialized.", this.dirPath));
             dir.mkdirs();
         } else if (!dir.isDirectory()) {
-            LOG.error(String.format("Data dir %s conflicts. HyperBase metadata initialization failed.", this.dir));
+            LOG.error(String.format("Data dirPath %s conflicts. HyperBase metadata initialization failed.", this.dirPath));
             throw new IllegalStateException();
         } else {
-            LOG.info(String.format("Data dir %s loaded. HyperBase metadata initialized.", this.dir));
+            LOG.info(String.format("Data dirPath %s loaded. HyperBase metadata initialized.", this.dirPath));
         }
     }
 
     @Override
     public synchronized void add(String name) {
-        Meta meta = new Meta(name, dir + "/" + name);
+        Meta meta = new Meta(name, dirPath + "/" + name);
         add(meta);
     }
 
     @Override
     public synchronized void add(Meta meta) {
         String name = meta.getName();
-        File f = new File(dir + "/" + name);
+        File f = new File(dirPath + "/" + name);
         if (f.exists()) {
             LOG.error(String.format("Table %s already exists. Table adding failed.", name));
             throw new IllegalArgumentException(name);
@@ -54,7 +58,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
 
     @Override
     public synchronized void delete(String name) {
-        File f = new File(dir + "/" + name);
+        File f = new File(dirPath + "/" + name);
         if (!f.exists()) {
             LOG.error(String.format("Table %s does not exist. Table adding failed.", name));
             throw new IllegalArgumentException(name);
@@ -66,7 +70,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
     @Override
     public List<Meta> getAllMeta() {
         List<Meta> list = new ArrayList<Meta>();
-        File dir = new File(this.dir);
+        File dir = new File(this.dirPath);
         for (File f : dir.listFiles()) {
             String name = f.getName();
             list.add(new Meta(name, dir + "/" + name));
@@ -76,7 +80,7 @@ public class HyperMetaStoreImpl implements HyperMetaStore {
 
     @Override
     public Meta getMeta(String name) {
-        String path = dir + "/" + name;
+        String path = dirPath + "/" + name;
         File f = new File(path);
         if (!f.exists()) {
             LOG.error(String.format("Table %s does not exist. Table adding failed.", name));

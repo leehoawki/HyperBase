@@ -10,8 +10,6 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class HyperDataStoreImpl implements HyperDataStore {
 
@@ -24,15 +22,9 @@ public class HyperDataStoreImpl implements HyperDataStore {
     public HyperDataStoreImpl(Meta meta) {
         this.meta = meta;
         load();
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                HyperDataStoreImpl.this.dump();
-            }
-        }, 0, 1, TimeUnit.HOURS);
     }
 
-    private void load() {
+    public synchronized void load() {
         LOG.info(String.format("Table %s loading from %s in progress...", meta.getName(), meta.getPath()));
         try {
             BufferedReader br = new BufferedReader(new FileReader(meta.getPath()));
@@ -51,7 +43,7 @@ public class HyperDataStoreImpl implements HyperDataStore {
     }
 
 
-    private void dump() {
+    public synchronized void dump() {
         LOG.info(String.format("Table %s dumping to %s in progress...", meta.getName(), meta.getPath()));
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(meta.getPath()));

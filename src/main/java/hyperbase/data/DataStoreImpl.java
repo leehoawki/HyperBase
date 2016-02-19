@@ -6,6 +6,8 @@ import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DataStoreImpl implements DataStore {
@@ -51,7 +53,8 @@ public class DataStoreImpl implements DataStore {
                 bw.write("\n");
             }
             bw.close();
-            new File(tmpPath).renameTo(new File(meta.getPath()));
+            Files.move(new File(tmpPath).toPath(), new File(meta.getPath()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
         } catch (Exception ex) {
             LOG.error(String.format("Table %s dumping error.", meta.getName()), ex);
             throw new IllegalStateException(String.format("Table %s dumping error."), ex);

@@ -65,7 +65,18 @@ public class LGWRImpl implements LGWR {
 
         @Override
         public void run() {
-            // TODO
+            while (true) {
+                try {
+                    Redo redo = queue.take();
+                    writer.write(String.format("%s:%s\n", redo.action, redo.data));
+                    writer.flush();
+                } catch (IOException ex) {
+                    LOG.error("", ex);
+                    throw new IllegalStateException(ex);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 }

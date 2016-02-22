@@ -3,7 +3,9 @@ package hyperbase.service;
 import hyperbase.data.Data;
 import hyperbase.data.DataStore;
 import hyperbase.data.DataStoreFactory;
+import hyperbase.dbwr.DBWR;
 import hyperbase.exception.TableNotFoundException;
+import hyperbase.lgwr.LGWR;
 import hyperbase.meta.Meta;
 import hyperbase.meta.MetaStore;
 import org.apache.log4j.Logger;
@@ -25,6 +27,12 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
 
     @Autowired
     MetaStore metaStore;
+
+    @Autowired
+    LGWR logWriter;
+
+    @Autowired
+    DBWR dbWriter;
 
     @Autowired
     DataStoreFactory storeFactory;

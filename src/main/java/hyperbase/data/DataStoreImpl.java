@@ -2,12 +2,11 @@ package hyperbase.data;
 
 
 import hyperbase.meta.Meta;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DataStoreImpl implements DataStore {
@@ -37,7 +36,7 @@ public class DataStoreImpl implements DataStore {
             br.close();
         } catch (Exception ex) {
             LOG.error(String.format("Table %s loading error.", meta.getName()), ex);
-            throw new IllegalStateException(String.format("Table %s loading error."), ex);
+            throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s loaded from %s.", meta.getName(), meta.getPath()));
     }
@@ -53,11 +52,10 @@ public class DataStoreImpl implements DataStore {
                 bw.write("\n");
             }
             bw.close();
-            Files.move(new File(tmpPath).toPath(), new File(meta.getPath()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            FileUtils.moveFile(new File(tmpPath), new File(meta.getPath()));
         } catch (IOException ex) {
-        } catch (Exception ex) {
             LOG.error(String.format("Table %s dumping error.", meta.getName()), ex);
-            throw new IllegalStateException(String.format("Table %s dumping error."), ex);
+            throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s dumped to %s.", meta.getName(), meta.getPath()));
     }

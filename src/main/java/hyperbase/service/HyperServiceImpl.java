@@ -6,6 +6,7 @@ import hyperbase.data.DataStoreFactory;
 import hyperbase.dbwr.DBWR;
 import hyperbase.exception.TableNotFoundException;
 import hyperbase.lgwr.LGWR;
+import hyperbase.lgwr.Redo;
 import hyperbase.meta.Meta;
 import hyperbase.meta.MetaStore;
 import org.apache.log4j.Logger;
@@ -17,8 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class HyperServiceImpl implements HyperService, InitializingBean {
@@ -52,23 +51,18 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         }
         LOG.info("DataStores loaded.");
 
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                for (DataStore store : dataStores.values()) {
-                    store.dump();
-                }
-            }
-        }, 1, 1, TimeUnit.MINUTES);
+        LOG.info("DataStores restoring.");
+        //TODO
+        LOG.info("DataStores restored.");
     }
 
     @Override
     public List<Table> getTables() {
         List<Table> tables = new ArrayList<Table>();
         for (Meta m : metaStore.getAllMeta()) {
-            Table t = new Table();
-            t.setName(m.getName());
-            tables.add(t);
+            Table table = new Table();
+            table.setName(m.getName());
+            tables.add(table);
         }
         return tables;
     }
@@ -76,21 +70,27 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     @Override
     public Table getTable(String name) {
         Meta m = metaStore.getMeta(name);
-        Table t = new Table();
-        t.setName(m.getName());
-        return t;
+        Table table = new Table();
+        table.setName(m.getName());
+        return table;
     }
 
     @Override
-    public void createTable(String name) {
-        Meta meta = metaStore.add(name);
-        dataStores.put(name, storeFactory.createStore(meta));
+    public void createTable(String table) {
+        Redo redo = new Redo(Redo.CREATE, table);
+        logWriter.append(redo);
+
+        Meta meta = metaStore.add(table);
+        dataStores.put(table, storeFactory.createStore(meta));
     }
 
     @Override
-    public void deleteTable(String name) {
-        dataStores.remove(name);
-        metaStore.delete(name);
+    public void deleteTable(String table) {
+        Redo redo = new Redo(Redo.DELETE, table);
+        logWriter.append(redo);
+
+        dataStores.remove(table);
+        metaStore.delete(table);
     }
 
     @Override
@@ -115,6 +115,8 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         if (store == null) {
             throw new TableNotFoundException(table);
         }
+        Redo redo = new Redo(Redo.UPDATE, table, key, val);
+        logWriter.append(redo);
 
         Data data = new Data();
         data.setKey(key);

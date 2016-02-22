@@ -3,7 +3,7 @@ package hyperbase.service;
 
 public class Row {
     String key;
-    
+
     String value;
 
     public Row() {

@@ -49,7 +49,7 @@ public class ApiController {
         } else if ("delete".equals(action)) {
             service.deleteTable(table);
         } else {
-            throw new IllegalArgumentException(String.format("Illegal Action : %s. Only create/delete are supported.", action));
+            throw new IllegalArgumentException(action);
         }
     }
 

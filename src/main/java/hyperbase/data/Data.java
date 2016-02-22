@@ -3,7 +3,7 @@ package hyperbase.data;
 
 import java.io.Serializable;
 
-public class Data implements Serializable{
+public class Data implements Serializable {
     String key;
 
     String val;

@@ -1,4 +1,8 @@
 # HyperBase
+
+
+![UNDER CONSTRUCTION](http://ocp.sparwood.ca/wp-content/uploads/2013/12/Under-construction.jpg)
+
 A zero configuration, non-distributed key-value store that runs in a servlet container.
 
     ++++++++++++++++++++++++++++++++++++
@@ -58,7 +62,6 @@ HyperBase provides a RESTful API that allows to query data using GET and update/
 
 Data will get removed after being updated as an empty string.
 
-## TODO
 
 
 

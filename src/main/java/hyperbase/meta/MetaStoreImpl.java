@@ -1,5 +1,7 @@
 package hyperbase.meta;
 
+import hyperbase.exception.TableConflictException;
+import hyperbase.exception.TableNotFoundException;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Repository;
 
@@ -47,7 +49,7 @@ public class MetaStoreImpl implements MetaStore {
         File f = new File(dirPath + "/" + name);
         if (f.exists()) {
             LOG.error(String.format("Table %s already exists. Table adding failed.", name));
-            throw new IllegalArgumentException(String.format("Table %s already exists. Table adding failed.", name));
+            throw new TableConflictException(name);
         }
         try {
             f.createNewFile();
@@ -59,14 +61,14 @@ public class MetaStoreImpl implements MetaStore {
     }
 
     @Override
-    public synchronized void delete(String name) {
-        File f = new File(dirPath + "/" + name);
+    public synchronized void delete(String table) {
+        File f = new File(dirPath + "/" + table);
         if (!f.exists()) {
-            LOG.error(String.format("Table %s does not exist. Table adding failed.", name));
-            throw new IllegalArgumentException(String.format("Table %s does not exist. Table adding failed.", name));
+            LOG.error(String.format("Table %s does not exist. Table adding failed.", table));
+            throw new TableNotFoundException(table);
         }
         f.delete();
-        LOG.info(String.format("Table %s deleted.", name));
+        LOG.info(String.format("Table %s deleted.", table));
     }
 
     @Override
@@ -81,13 +83,13 @@ public class MetaStoreImpl implements MetaStore {
     }
 
     @Override
-    public Meta getMeta(String name) {
-        String path = dirPath + "/" + name;
+    public Meta getMeta(String table) {
+        String path = dirPath + "/" + table;
         File f = new File(path);
         if (!f.exists()) {
-            LOG.error(String.format("Table %s does not exist. Table adding failed.", name));
-            throw new IllegalArgumentException(name);
+            LOG.error(String.format("Table %s does not exist. Table adding failed.", table));
+            throw new TableNotFoundException(table);
         }
-        return new Meta(name, path);
+        return new Meta(table, path);
     }
 }

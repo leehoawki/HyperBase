@@ -3,6 +3,7 @@ package hyperbase.service;
 import hyperbase.data.Data;
 import hyperbase.data.DataStore;
 import hyperbase.data.DataStoreFactory;
+import hyperbase.exception.TableNotFoundException;
 import hyperbase.meta.Meta;
 import hyperbase.meta.MetaStore;
 import org.apache.log4j.Logger;
@@ -88,17 +89,15 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     public Row get(String table, String key) {
         DataStore store = dataStores.get(table);
         if (store == null) {
-            throw new IllegalArgumentException(String.format("Table %s does not exist.", table));
+            throw new TableNotFoundException(table);
         }
 
         Data data = store.get(key);
-        if (data == null) {
-            return null;
-        }
-
         Row row = new Row();
         row.setKey(key);
-        row.setValue(data.getVal());
+        if (data != null) {
+            row.setValue(data.getVal());
+        }
         return row;
     }
 
@@ -106,7 +105,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     public void set(String table, String key, String val) {
         DataStore store = dataStores.get(table);
         if (store == null) {
-            throw new IllegalArgumentException(String.format("Table %s does not exist.", table));
+            throw new TableNotFoundException(table);
         }
 
         Data data = new Data();

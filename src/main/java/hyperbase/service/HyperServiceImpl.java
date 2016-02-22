@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class HyperServiceImpl implements HyperService, InitializingBean {
@@ -38,6 +41,8 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
 
     Map<String, DataStore> dataStores;
 
+    ScheduledExecutorService ses;
+
     public HyperServiceImpl() {
 
     }
@@ -50,6 +55,15 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
             dataStores.put(meta.getName(), storeFactory.createStore(meta));
         }
         LOG.info("DataStores loaded.");
+        ses = Executors.newScheduledThreadPool(1);
+        ses.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                for (DataStore store : dataStores.values()) {
+                    dbWriter.write(store);
+                }
+            }
+        }, 1, 1, TimeUnit.MINUTES);
 
         LOG.info("DataStores restoring.");
         //TODO

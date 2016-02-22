@@ -71,7 +71,7 @@ public class LGWRImpl implements LGWR {
                     writer.write(String.format("%s:%s\n", redo.action, redo.data));
                     writer.flush();
                 } catch (IOException ex) {
-                    LOG.error("", ex);
+                    LOG.error("Failed to write data to Redo log.", ex);
                     throw new IllegalStateException(ex);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();

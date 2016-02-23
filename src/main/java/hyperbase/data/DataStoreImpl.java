@@ -34,7 +34,7 @@ public class DataStoreImpl implements DataStore {
                 map.put(pair[0], new Data(pair[0], pair[1]));
             }
             br.close();
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.error(String.format("Table %s loading error.", meta.getName()), ex);
             throw new IllegalStateException(ex);
         }

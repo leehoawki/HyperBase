@@ -55,6 +55,11 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
             dataStores.put(meta.getName(), storeFactory.createStore(meta));
         }
         LOG.info("DataStores loaded.");
+
+        LOG.info("DataStores restoring.");
+        logWriter.restore(this);
+        LOG.info("DataStores restored.");
+
         ses = Executors.newScheduledThreadPool(1);
         ses.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -64,10 +69,6 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
                 }
             }
         }, 1, 1, TimeUnit.MINUTES);
-
-        LOG.info("DataStores restoring.");
-        //TODO
-        LOG.info("DataStores restored.");
     }
 
     @Override

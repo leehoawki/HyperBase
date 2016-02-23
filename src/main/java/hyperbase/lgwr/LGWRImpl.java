@@ -71,12 +71,13 @@ public class LGWRImpl implements LGWR {
                     String[] b = StringUtils.split(a[1], ',');
                     service.set(b[0], b[1], b[2]);
                 } else {
-                    throw new IllegalStateException();
+                    LOG.error(String.format("Instance Restore failed. Unrecognized data %s in redo log %s .", a[0], filePath));
+                    throw new IllegalArgumentException(a[0]);
                 }
             }
             br.close();
         } catch (IOException ex) {
-            LOG.error("", ex);
+            LOG.error("Instance Restore failed.", ex);
             throw new IllegalStateException(ex);
         }
     }

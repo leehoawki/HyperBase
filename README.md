@@ -3,7 +3,9 @@
 
 ![UNDER CONSTRUCTION](http://ocp.sparwood.ca/wp-content/uploads/2013/12/Under-construction.jpg)
 
-A zero configuration, non-distributed key-value store that runs in a servlet container.
+## Overview
+
+A zero configuration key-value store that runs in a servlet container. Snapshot and instance restore function supported.
 
     ++++++++++++++++++++++++++++++++++++
     |                                  |
@@ -21,11 +23,11 @@ A zero configuration, non-distributed key-value store that runs in a servlet con
     ++++++++++++++++++++++++++++++++++++
     
    
-Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified entities in memory will be sent to another writer thread to dump into a data file on disk. Then it can restore itself after crash or shutdown using the snapshot on disk and the redo log.
+Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified entities in memory will be sent to another writer thread to dump into data files on disk. So it can restore itself after crash or shutdown using the snapshot and the redo log on disk.
 
 ## Building and Running
 
-To build this project, you must have Maven installed.
+To build this project, you must have Maven and Java8 installed.
 
     git clone https://github.com/leehoawki/HyperBase.git
     cd HyperBase

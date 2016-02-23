@@ -1,11 +1,11 @@
 package hyperbase.lgwr;
 
 
-import hyperbase.service.HyperService;
+import java.util.Iterator;
 
 
 public interface LGWR {
     public void append(Redo redo);
 
-    public void restore(HyperService service);
+    public Iterator<Redo> read();
 }

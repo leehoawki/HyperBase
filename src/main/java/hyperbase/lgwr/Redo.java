@@ -1,17 +1,25 @@
 package hyperbase.lgwr;
 
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.ArrayUtils;
 
 public class Redo {
 
     String action;
 
-    String data;
+    String[] data;
 
-    public Redo(String action, String... args) {
+    public Redo(String action, String... data) {
         this.action = action;
-        this.data = StringUtils.join(args, ',');
+        this.data = data;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public String[] getData() {
+        return data;
     }
 
     public static final String CREATE = "CREATE";

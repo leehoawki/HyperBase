@@ -14,10 +14,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +54,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         LOG.info("DataStores loaded.");
 
         LOG.info("DataStores restoring.");
-        logWriter.restore(this);
+        restore();
         LOG.info("DataStores restored.");
 
         ses = Executors.newScheduledThreadPool(1);
@@ -70,6 +67,26 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
             }
         }, 1, 1, TimeUnit.MINUTES);
     }
+
+    void restore() {
+        Iterator<Redo> redos = logWriter.read();
+        while (redos.hasNext()) {
+            Redo redo = redos.next();
+            String action = redo.getAction();
+            String[] args = redo.getData();
+            if (Redo.CREATE.equals(action)) {
+                createTable(args[0]);
+            } else if (Redo.DELETE.equals(action)) {
+                deleteTable(args[0]);
+            } else if (Redo.UPDATE.equals(action)) {
+                set(args[0], args[1], args[2]);
+            } else {
+                LOG.error(String.format("Instance Restore failed. Unrecognized data %s in redo log.", args[0]));
+                throw new IllegalArgumentException(args[0]);
+            }
+        }
+    }
+
 
     @Override
     public List<Table> getTables() {

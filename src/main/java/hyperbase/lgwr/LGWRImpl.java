@@ -1,11 +1,16 @@
 package hyperbase.lgwr;
 
-import hyperbase.service.HyperService;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -57,28 +62,34 @@ public class LGWRImpl implements LGWR {
     }
 
     @Override
-    public void restore(HyperService service) {
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(filePath));
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] a = StringUtils.split(line, ':');
-                if (Redo.CREATE.equals(a[0])) {
-                    service.createTable(a[1]);
-                } else if (Redo.DELETE.equals(a[0])) {
-                    service.deleteTable(a[1]);
-                } else if (Redo.UPDATE.equals(a[0])) {
-                    String[] b = StringUtils.split(a[1], ',');
-                    service.set(b[0], b[1], b[2]);
-                } else {
-                    LOG.error(String.format("Instance Restore failed. Unrecognized data %s in redo log %s .", a[0], filePath));
-                    throw new IllegalArgumentException(a[0]);
-                }
+    public Iterator<Redo> read() {
+        return new RedoIterator(filePath);
+    }
+
+
+    static class RedoIterator implements Iterator<Redo> {
+
+        LineIterator iterator;
+
+        public RedoIterator(String filePath) {
+            try {
+                iterator = FileUtils.lineIterator(new File(filePath));
+            } catch (IOException ex) {
+                LOG.error("", ex);
+                throw new IllegalStateException(ex);
             }
-            br.close();
-        } catch (IOException ex) {
-            LOG.error("Instance Restore failed.", ex);
-            throw new IllegalStateException(ex);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public Redo next() {
+            String line = iterator.nextLine();
+            String[] a = StringUtils.split(line, ':');
+            return new Redo(a[0], Arrays.copyOfRange(a, 1, a.length));
         }
     }
 
@@ -98,7 +109,7 @@ public class LGWRImpl implements LGWR {
             while (true) {
                 try {
                     Redo redo = queue.take();
-                    writer.write(String.format("%s:%s\n", redo.action, redo.data));
+                    writer.write(String.format("%s:%s\n", redo.getAction(), StringUtils.join(redo.getData(), ',')));
                     writer.flush();
                 } catch (IOException ex) {
                     LOG.error("Failed to write data to Redo log.", ex);

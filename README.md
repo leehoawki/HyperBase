@@ -27,7 +27,7 @@ Queries/Updates will get handled by service module and write all updates info in
 
 ## Building and Running
 
-To build this project, you must have Maven and Java8 installed.
+To build this project, you must have Maven and Jdk (higher than 1.6) installed.
 
     git clone https://github.com/leehoawki/HyperBase.git
     cd HyperBase

@@ -1,8 +1,6 @@
 package hyperbase.lgwr;
 
 
-import org.apache.commons.lang.ArrayUtils;
-
 public class Redo {
     long scn;
 

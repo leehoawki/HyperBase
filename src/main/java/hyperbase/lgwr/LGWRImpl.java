@@ -26,20 +26,12 @@ public class LGWRImpl implements LGWR {
     BlockingQueue<Redo> queue;
 
     public LGWRImpl() {
-        this(LGWRImpl.class.getResource("/").getPath() + "/redo", "hyper.redo");
+        this(LGWRImpl.class.getResource("/").getPath() + "/hyper.redo");
     }
 
-    public LGWRImpl(String dirPath, String filename) {
-        LOG.info(String.format("LGWR initializing at %s", dirPath));
-        File dir = new File(dirPath);
-        this.filePath = dirPath + "/" + filename;
-        if (!dir.exists()) {
-            dir.mkdirs();
-        } else if (!dir.isDirectory()) {
-            LOG.error(String.format("LGWR dirPath %s conflicts. Initialization failed.", dirPath));
-            throw new IllegalStateException();
-        }
-
+    public LGWRImpl(String filePath) {
+        LOG.info(String.format("LGWR initializing at %s", filePath));
+        this.filePath = filePath;
         try {
             this.writer = new FileWriter(filePath);
         } catch (IOException ex) {
@@ -75,7 +67,7 @@ public class LGWRImpl implements LGWR {
             try {
                 iterator = FileUtils.lineIterator(new File(filePath));
             } catch (IOException ex) {
-                LOG.error("", ex);
+                LOG.error(String.format("Redo log open failed %s.", filePath), ex);
                 throw new IllegalStateException(ex);
             }
         }
@@ -89,7 +81,7 @@ public class LGWRImpl implements LGWR {
         public Redo next() {
             String line = iterator.nextLine();
             String[] a = StringUtils.split(line, ':');
-            return new Redo(a[0], Arrays.copyOfRange(a, 1, a.length));
+            return new Redo(a[0], Arrays.copyOfRange(a, 1, a.length - 1));
         }
     }
 

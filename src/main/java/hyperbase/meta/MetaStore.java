@@ -14,5 +14,7 @@ public interface MetaStore {
     public Meta getMeta(String name);
 
     public long getSCN();
+
+    public long nextSCN();
 }
 

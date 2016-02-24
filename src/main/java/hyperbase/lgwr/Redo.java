@@ -4,14 +4,20 @@ package hyperbase.lgwr;
 import org.apache.commons.lang.ArrayUtils;
 
 public class Redo {
+    long scn;
 
     String action;
 
     String[] data;
 
     public Redo(String action, String... data) {
+        this.scn = scn;
         this.action = action;
         this.data = data;
+    }
+
+    public long getScn() {
+        return scn;
     }
 
     public String getAction() {

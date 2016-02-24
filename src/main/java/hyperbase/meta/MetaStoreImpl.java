@@ -116,6 +116,11 @@ public class MetaStoreImpl implements MetaStore {
         return scn.longValue();
     }
 
+    @Override
+    public long nextSCN() {
+        return scn.incrementAndGet();
+    }
+
     void save() {
         try {
             pc.setProperty("SCN", scn.incrementAndGet());

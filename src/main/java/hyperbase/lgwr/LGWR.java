@@ -7,5 +7,7 @@ import java.util.Iterator;
 public interface LGWR {
     public void append(Redo redo);
 
-    public Iterator<Redo> read();
+    public void archive();
+
+    public Iterator<Redo> read(long scn);
 }

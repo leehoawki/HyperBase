@@ -54,7 +54,12 @@ public class LGWRImpl implements LGWR {
     }
 
     @Override
-    public Iterator<Redo> read() {
+    public void archive() {
+
+    }
+
+    @Override
+    public Iterator<Redo> read(long scn) {
         return new RedoIterator(filePath);
     }
 

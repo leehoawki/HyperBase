@@ -23,8 +23,7 @@ public class DataStoreImpl implements DataStore {
         this.load();
     }
 
-    @Override
-    public void load() {
+    void load() {
         LOG.info(String.format("Table %s loading from %s in progress...", meta.getName(), meta.getPath()));
         try {
             BufferedReader br = new BufferedReader(new FileReader(meta.getPath()));
@@ -43,7 +42,7 @@ public class DataStoreImpl implements DataStore {
     }
 
     @Override
-    public void dump() {
+    public synchronized void dump() {
         LOG.info(String.format("Table %s dumping to %s in progress...", meta.getName(), meta.getPath()));
         try {
             String tmpPath = meta.getPath() + ".tmp";

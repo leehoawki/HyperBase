@@ -12,14 +12,17 @@ public class DataStoreTest extends TestCase {
 
     DataStore store;
 
+    DataStoreFactory factory;
+
     static String name = "test";
 
     @Override
     public void setUp() {
         mstore = new MetaStoreImpl();
+        factory = new DataStoreFactoryImpl();
         mstore.add(name);
         Meta meta = mstore.getMeta(name);
-        store = new DataStoreImpl(meta);
+        store = factory.createStore(meta);
     }
 
     @Override

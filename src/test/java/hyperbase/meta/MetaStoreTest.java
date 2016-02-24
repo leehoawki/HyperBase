@@ -17,6 +17,15 @@ public class MetaStoreTest extends TestCase {
 
     @Test
     public void test() {
+        MetaStore store = new MetaStoreImpl();
+        assertEquals(store.getAllMeta().size(), 0);
+        store.add("MetaStoreTest1");
 
+        MetaStore store2 = new MetaStoreImpl();
+        assertNotNull(store2.getMeta("MetaStoreTest1"));
+        store2.delete("MetaStoreTest1");
+
+        MetaStore store3 = new MetaStoreImpl();
+        assertEquals(store3.getAllMeta().size(), 0);
     }
 }

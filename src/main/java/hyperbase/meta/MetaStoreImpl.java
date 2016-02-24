@@ -66,7 +66,7 @@ public class MetaStoreImpl implements MetaStore {
     }
 
     @Override
-    public synchronized Meta add(String name) {
+    public Meta add(String name) {
         Meta meta = new Meta(name, String.format("/%s/hyper.%s.data", dirPath, name));
         add(meta);
         return meta;
@@ -121,7 +121,7 @@ public class MetaStoreImpl implements MetaStore {
         return scn.incrementAndGet();
     }
 
-    void save() {
+    synchronized void save() {
         try {
             pc.setProperty("SCN", scn.incrementAndGet());
             pc.save();

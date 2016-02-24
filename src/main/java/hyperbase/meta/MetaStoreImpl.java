@@ -2,94 +2,127 @@ package hyperbase.meta;
 
 import hyperbase.exception.TableConflictException;
 import hyperbase.exception.TableNotFoundException;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class MetaStoreImpl implements MetaStore {
 
     static Logger LOG = Logger.getLogger(MetaStoreImpl.class);
 
+    String filePath;
+
+    PropertiesConfiguration pc;
+
+    Configuration tc;
+
+    // Meta Data
     String dirPath;
 
+    AtomicLong scn;
+
+    Map<String, Meta> metas;
+
     public MetaStoreImpl() {
-        this(MetaStoreImpl.class.getResource("/").getPath() + "/data");
+        this(MetaStoreImpl.class.getResource("/").getPath() + "/hyper.ctl");
     }
 
-    public MetaStoreImpl(String dirPath) {
-        LOG.info(String.format("Meta Store initializing from %s", dirPath));
-        this.dirPath = dirPath;
-        File dir = new File(this.dirPath);
-        if (!dir.exists()) {
-            LOG.info(String.format("Data dirPath %s initializing. HyperBase metadata initialized.", this.dirPath));
-            dir.mkdirs();
-        } else if (!dir.isDirectory()) {
-            LOG.error(String.format("Data dirPath %s conflicts. HyperBase metadata initialization failed.", this.dirPath));
-            throw new IllegalStateException();
-        } else {
-            LOG.info(String.format("Data dirPath %s loaded. HyperBase metadata initialized.", this.dirPath));
+    public MetaStoreImpl(String filePath) {
+        LOG.info(String.format("Meta Store initializing from %s", filePath));
+        this.filePath = filePath;
+        try {
+            File f = new File(filePath);
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+            this.pc = new PropertiesConfiguration(f);
+
+            scn = new AtomicLong(pc.getLong("SCN", 0L));
+            dirPath = pc.getString("DATADIR", MetaStoreImpl.class.getResource("/").getPath());
+            tc = pc.subset("TABLE");
+            Iterator<String> keys = tc.getKeys();
+            metas = new ConcurrentHashMap<String, Meta>();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                metas.put(key, new Meta(key, tc.getString(key)));
+            }
+
+        } catch (ConfigurationException | IOException ex) {
+            LOG.error(String.format("Meta file initialization failed %s.", filePath), ex);
+            throw new IllegalStateException(ex);
         }
+
+        LOG.info(String.format("Meta Store initialized from %s", filePath));
     }
 
     @Override
     public synchronized Meta add(String name) {
-        Meta meta = new Meta(name, dirPath + "/" + name);
-        this.add(meta);
+        Meta meta = new Meta(name, String.format("/%s/hyper.%s.data", dirPath, name));
+        add(meta);
         return meta;
     }
 
     @Override
     public synchronized void add(Meta meta) {
         String name = meta.getName();
-        File f = new File(dirPath + "/" + name);
-        if (f.exists()) {
+        if (metas.containsKey(name)) {
             LOG.error(String.format("Table %s already exists. Table adding failed.", name));
             throw new TableConflictException(name);
         }
-        try {
-            f.createNewFile();
-        } catch (IOException ex) {
-            LOG.error(String.format("Datafile %s creation failed. Table adding failed.", name), ex);
-            throw new IllegalStateException(ex);
-        }
+
+        metas.put(meta.getName(), meta);
+        tc.addProperty(meta.getName(), meta.getPath());
+        save();
         LOG.info(String.format("Table %s created.", name));
     }
 
     @Override
     public synchronized void delete(String table) {
-        File f = new File(dirPath + "/" + table);
-        if (!f.exists()) {
+        if (!metas.containsKey(table)) {
             LOG.error(String.format("Table %s does not exist. Table adding failed.", table));
             throw new TableNotFoundException(table);
         }
-        f.delete();
+        metas.remove(table);
+        tc.clearProperty(table);
+        save();
         LOG.info(String.format("Table %s deleted.", table));
     }
 
     @Override
-    public List<Meta> getAllMeta() {
-        List<Meta> list = new ArrayList<Meta>();
-        File dir = new File(this.dirPath);
-        for (File f : dir.listFiles()) {
-            String name = f.getName();
-            list.add(new Meta(name, dir + "/" + name));
-        }
-        return list;
+    public Collection<Meta> getAllMeta() {
+        return metas.values();
     }
 
     @Override
     public Meta getMeta(String table) {
-        String path = dirPath + "/" + table;
-        File f = new File(path);
-        if (!f.exists()) {
-            LOG.error(String.format("Table %s does not exist. Table adding failed.", table));
+        if (!metas.containsKey(table)) {
             throw new TableNotFoundException(table);
         }
-        return new Meta(table, path);
+        return metas.get(table);
+    }
+
+    @Override
+    public long getSCN() {
+        return scn.longValue();
+    }
+
+    void save() {
+        try {
+            pc.setProperty("SCN", scn.incrementAndGet());
+            pc.save();
+        } catch (ConfigurationException ex) {
+            LOG.error(String.format("Meta file saving failed %s.", filePath), ex);
+            throw new IllegalStateException(ex);
+        }
     }
 }

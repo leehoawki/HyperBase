@@ -1,7 +1,6 @@
 package hyperbase.meta;
 
-import java.util.List;
-
+import java.util.Collection;
 
 public interface MetaStore {
     public Meta add(String name);
@@ -10,8 +9,10 @@ public interface MetaStore {
 
     public void delete(String name);
 
-    public List<Meta> getAllMeta();
+    public Collection<Meta> getAllMeta();
 
     public Meta getMeta(String name);
+
+    public long getSCN();
 }
 

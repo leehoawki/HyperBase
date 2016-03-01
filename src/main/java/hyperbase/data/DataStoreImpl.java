@@ -25,39 +25,13 @@ public class DataStoreImpl implements DataStore {
 
     void load() {
         LOG.info(String.format("Table %s loading from %s in progress...", meta.getName(), meta.getPath()));
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(meta.getPath()));
-            map = new ConcurrentHashMap<String, Data>();
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] pair = StringUtils.split(line, ":");
-                map.put(pair[0], new Data(pair[0], pair[1]));
-            }
-            br.close();
-        } catch (IOException ex) {
-            LOG.error(String.format("Table %s loading error.", meta.getName()), ex);
-            throw new IllegalStateException(ex);
-        }
+        // TODO
         LOG.info(String.format("Table %s loaded from %s.", meta.getName(), meta.getPath()));
     }
 
     @Override
-    public synchronized void dump() {
-        LOG.info(String.format("Table %s dumping to %s in progress...", meta.getName(), meta.getPath()));
-        try {
-            String tmpPath = meta.getPath() + ".tmp";
-            BufferedWriter bw = new BufferedWriter(new FileWriter(tmpPath));
-            for (Data data : map.values()) {
-                bw.write(String.format("%s:%s", data.getKey(), data.getVal()));
-                bw.write("\n");
-            }
-            bw.close();
-            Files.move(new File(tmpPath).toPath(), new File(meta.getPath()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            LOG.error(String.format("Table %s dumping error.", meta.getName()), ex);
-            throw new IllegalStateException(ex);
-        }
-        LOG.info(String.format("Table %s dumped to %s.", meta.getName(), meta.getPath()));
+    public synchronized void merge() {
+        //TODO
     }
 
     @Override

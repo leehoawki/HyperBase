@@ -12,6 +12,7 @@ A zero configuration key-value store that runs in a servlet container using Bitc
 Updates will get handled by service module and append into the datafiles directly. Meanwhile, the index of data in the memory will get updated too. It will create a new active data file when the old one becomes big enough. Older data files will get merged and archived regularly.
 
 ![Data](http://pic.yupoo.com/iammutex/BwqvSAGR/vSAG9.jpg)
+
 Queries will check the index in the memory first and then visit the position of the data files on disk to get the lastest data. After crash or shutdown, it will restore itself and try to recreate the index in memory using all the data files on disk.
 
 ## Building and Running

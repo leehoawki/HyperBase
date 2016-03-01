@@ -1,9 +1,9 @@
 package hyperbase.data;
 
 
+import hyperbase.meta.Meta;
 import hyperbase.meta.MetaStore;
 import hyperbase.meta.MetaStoreImpl;
-import hyperbase.meta.Meta;
 import junit.framework.TestCase;
 import org.junit.Test;
 

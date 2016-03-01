@@ -4,9 +4,6 @@ import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-
 
 @Component
 public class DataStoreFactoryImpl implements DataStoreFactory {

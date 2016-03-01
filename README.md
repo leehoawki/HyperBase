@@ -5,29 +5,18 @@
 
 ## Overview
 
-A zero configuration key-value store that runs in a servlet container. Snapshot and instance restore function supported.
+A zero configuration key-value store that runs in a servlet container using Bitcask as the storage model.
 
-    ++++++++++++++++++++++++++++++++++++
-    |                                  |
-    |     Controller                   |
-    |         |                        |
-    |         V                        |
-    |      Service   --->   DBWR       |
-    |         |               |        |
-    |         V               V        |
-    |       LGWR           DataFile    |
-    |         |                        |
-    |         V                        |
-    |      RedoLog                     |
-    |                                  |
-    ++++++++++++++++++++++++++++++++++++
-    
-   
-Queries/Updates will get handled by service module and write all updates info into redo log. Meanwhile, modified entities in memory will be sent to another writer thread to dump into data files on disk. So it can restore itself after crash or shutdown using the snapshot and the redo log on disk.
+![Datafiles](http://pic.yupoo.com/iammutex/BwqvS7Fs/wlJ3W.jpg)
+
+Updates will get handled by service module and append into the datafiles directly. Meanwhile, the index of data in the memory will get updated too. It will create a new active data file when the old one becomes big enough. Older data files will get merged and archived regularly.
+
+![Data](http://pic.yupoo.com/iammutex/BwqvSAGR/vSAG9.jpg)
+Queries will check the index in the memory first and then visit the position of the data files on disk to get the lastest data. After crash or shutdown, it will restore itself and try to recreate the index in memory using all the data files on disk.
 
 ## Building and Running
 
-To build this project, you must have Maven and Jdk (higher than 1.6) installed.
+To build this project, you must have Maven and Jdk(1.8) installed.
 
     git clone https://github.com/leehoawki/HyperBase.git
     cd HyperBase

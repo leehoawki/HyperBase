@@ -8,5 +8,7 @@ public interface DataStore {
 
     public Data get(String key);
 
+    public void restore();
+
     public void merge();
 }

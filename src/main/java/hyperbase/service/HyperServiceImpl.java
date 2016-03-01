@@ -9,7 +9,6 @@ import hyperbase.meta.MetaStore;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -39,16 +38,12 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         LOG.info("DataStores loading.");
         dataStores = new HashMap<String, DataStore>();
         for (Meta meta : metaStore.getAllMeta()) {
-            dataStores.put(meta.getName(), storeFactory.createStore(meta));
+            DataStore ds = storeFactory.createStore(meta);
+            ds.restore();
+            dataStores.put(meta.getName(), ds);
         }
         LOG.info("DataStores loaded.");
     }
-
-    @Scheduled(cron = "0 * * * * *")
-    void merge(){
-        dataStores.values().forEach(DataStore::merge);
-    }
-
 
     @Override
     public List<Table> getTables() {
@@ -91,9 +86,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         Data data = store.get(key);
         Row row = new Row();
         row.setKey(key);
-        if (data != null) {
-            row.setValue(data.getVal());
-        }
+        row.setValue(data.getVal());
         return row;
     }
 
@@ -104,9 +97,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
             throw new TableNotFoundException(table);
         }
 
-        Data data = new Data();
-        data.setKey(key);
-        data.setVal(val);
+        Data data = new Data(key, val);
         store.set(data);
     }
 }

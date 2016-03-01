@@ -15,12 +15,6 @@ public class DataStoreFactoryImpl implements DataStoreFactory {
 
     @Override
     public DataStore createStore(Meta meta) {
-        try {
-            new File(meta.getPath()).createNewFile();
-        } catch (IOException ex) {
-            LOG.error(String.format("Datafile %s:%s creation failed. Table adding failed.", meta.getName(), meta.getPath()), ex);
-            throw new IllegalStateException(ex);
-        }
         DataStore store = new DataStoreImpl(meta);
         return store;
     }

@@ -32,17 +32,6 @@ public class DataStoreTest extends TestCase {
 
     @Test
     public void test() {
-        store.set("1", "A");
-        store.set("2", "B");
-        store.set("3", "C");
-        store.set("4", "D");
-        store.set("2", "E");
-        store.set("3", "F");
-        store.dump();
-        DataStore store2 = new DataStoreImpl(mstore.getMeta(name));
-        assertEquals("A", store2.get("1").getVal());
-        assertEquals("E", store2.get("2").getVal());
-        assertEquals("F", store2.get("3").getVal());
-        assertEquals("D", store2.get("4").getVal());
+
     }
 }

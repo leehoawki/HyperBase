@@ -3,10 +3,7 @@ package hyperbase.service;
 import hyperbase.data.Data;
 import hyperbase.data.DataStore;
 import hyperbase.data.DataStoreFactory;
-import hyperbase.dbwr.DBWR;
 import hyperbase.exception.TableNotFoundException;
-import hyperbase.lgwr.LGWR;
-import hyperbase.lgwr.Redo;
 import hyperbase.meta.Meta;
 import hyperbase.meta.MetaStore;
 import org.apache.log4j.Logger;
@@ -14,10 +11,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class HyperServiceImpl implements HyperService, InitializingBean {
@@ -28,17 +26,9 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     MetaStore metaStore;
 
     @Autowired
-    LGWR logWriter;
-
-    @Autowired
-    DBWR dbWriter;
-
-    @Autowired
     DataStoreFactory storeFactory;
 
     Map<String, DataStore> dataStores;
-
-    ScheduledExecutorService ses;
 
     public HyperServiceImpl() {
 
@@ -54,37 +44,10 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         LOG.info("DataStores loaded.");
 
         LOG.info("DataStores restoring.");
-        restore();
+        // TODO
         LOG.info("DataStores restored.");
 
-        ses = Executors.newScheduledThreadPool(1);
-        ses.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                for (DataStore store : dataStores.values()) {
-                    dbWriter.write(store);
-                }
-            }
-        }, 1, 1, TimeUnit.MINUTES);
-    }
 
-    void restore() {
-        Iterator<Redo> redos = logWriter.read();
-        while (redos.hasNext()) {
-            Redo redo = redos.next();
-            String action = redo.getAction();
-            String[] args = redo.getData();
-            if (Redo.CREATE.equals(action)) {
-                createTable(args[0]);
-            } else if (Redo.DELETE.equals(action)) {
-                deleteTable(args[0]);
-            } else if (Redo.UPDATE.equals(action)) {
-                set(args[0], args[1], args[2]);
-            } else {
-                LOG.error(String.format("Instance Restore failed. Unrecognized data %s in redo log.", args[0]));
-                throw new IllegalArgumentException(args[0]);
-            }
-        }
     }
 
 
@@ -109,18 +72,12 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
 
     @Override
     public void createTable(String table) {
-        Redo redo = new Redo(Redo.CREATE, table);
-        logWriter.append(redo);
-
         Meta meta = metaStore.add(table);
         dataStores.put(table, storeFactory.createStore(meta));
     }
 
     @Override
     public void deleteTable(String table) {
-        Redo redo = new Redo(Redo.DELETE, table);
-        logWriter.append(redo);
-
         dataStores.remove(table);
         metaStore.delete(table);
     }
@@ -147,8 +104,6 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         if (store == null) {
             throw new TableNotFoundException(table);
         }
-        Redo redo = new Redo(Redo.UPDATE, table, key, val);
-        logWriter.append(redo);
 
         Data data = new Data();
         data.setKey(key);

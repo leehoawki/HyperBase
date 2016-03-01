@@ -4,6 +4,15 @@ package hyperbase.data;
 import java.io.Serializable;
 
 public class Data implements Serializable {
+
+    String crc;
+
+    long timestamp;
+
+    int ksz;
+
+    int vsz;
+
     String key;
 
     String val;

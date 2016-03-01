@@ -5,13 +5,7 @@ import java.io.Serializable;
 
 public class Data implements Serializable {
 
-    String crc;
-
     long timestamp;
-
-    int ksz;
-
-    int vsz;
 
     String key;
 
@@ -21,9 +15,10 @@ public class Data implements Serializable {
 
     }
 
-    public Data(String key, String val) {
+    public Data(String key, String val, long timestamp) {
         this.key = key;
         this.val = val;
+        this.timestamp = timestamp;
     }
 
     public String getKey() {

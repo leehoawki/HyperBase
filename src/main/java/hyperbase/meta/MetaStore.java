@@ -12,9 +12,5 @@ public interface MetaStore {
     public Collection<Meta> getAllMeta();
 
     public Meta getMeta(String name);
-
-    public long getSCN();
-
-    public long nextSCN();
 }
 

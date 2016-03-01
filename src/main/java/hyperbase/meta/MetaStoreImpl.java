@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class MetaStoreImpl implements MetaStore {
@@ -26,11 +25,6 @@ public class MetaStoreImpl implements MetaStore {
     PropertiesConfiguration pc;
 
     Configuration tc;
-
-    // Meta Data
-    String dirPath;
-
-    AtomicLong scn;
 
     Map<String, Meta> metas;
 
@@ -47,9 +41,6 @@ public class MetaStoreImpl implements MetaStore {
                 f.createNewFile();
             }
             this.pc = new PropertiesConfiguration(f);
-
-            scn = new AtomicLong(pc.getLong("SCN", 0L));
-            dirPath = pc.getString("DATADIR", MetaStoreImpl.class.getResource("/").getPath());
             tc = pc.subset("TABLE");
             Iterator<String> keys = tc.getKeys();
             metas = new ConcurrentHashMap<String, Meta>();
@@ -68,7 +59,7 @@ public class MetaStoreImpl implements MetaStore {
 
     @Override
     public Meta add(String name) {
-        Meta meta = new Meta(name, String.format("/%s/hyper.%s.data", dirPath, name));
+        Meta meta = new Meta(name, String.format("/%s/hyper.%s.data", MetaStoreImpl.class.getResource("/").getPath(), name));
         add(meta);
         return meta;
     }
@@ -112,19 +103,9 @@ public class MetaStoreImpl implements MetaStore {
         return metas.get(table);
     }
 
-    @Override
-    public long getSCN() {
-        return scn.longValue();
-    }
-
-    @Override
-    public long nextSCN() {
-        return scn.incrementAndGet();
-    }
 
     synchronized void save() {
         try {
-            pc.setProperty("SCN", scn.incrementAndGet());
             pc.save();
         } catch (ConfigurationException ex) {
             LOG.error(String.format("Meta file saving failed %s.", filePath), ex);

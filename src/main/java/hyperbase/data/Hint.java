@@ -9,13 +9,9 @@ public class Hint {
 
     long offset;
 
-    int size;
-
-
-    public Hint(String key, String name, long offset, int size) {
+    public Hint(String key, String name, long offset) {
         this.key = key;
         this.fileName = name;
         this.offset = offset;
-        this.size = size;
     }
 }

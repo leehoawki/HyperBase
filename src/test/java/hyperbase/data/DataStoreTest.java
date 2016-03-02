@@ -31,7 +31,25 @@ public class DataStoreTest extends TestCase {
     }
 
     @Test
-    public void test() {
+    public void testGetAndSet() {
+        store.set("1", "A");
+        store.set("1", "B");
+        store.set("1", "A");
+        store.set("2", "B");
+        store.set("2", "BBBBBBBBBB");
+        store.set("3", "A");
+        store.set("3", null);
+        store.set("3", "");
+        store.set("", "A");
+
+        assertEquals(store.get("1").getVal(), "A");
+        assertEquals(store.get("2").getVal(), "BBBBBBBBBB");
+        assertEquals(store.get("3").getVal(), "");
+        assertEquals(store.get("").getVal(), "A");
+    }
+
+    @Test
+    public void testRestore() {
         store.set("1", "A");
         store.set("1", "B");
         store.set("1", "A");

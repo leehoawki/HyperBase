@@ -37,7 +37,4 @@ public class Data implements Serializable {
             return bos.toByteArray();
         }
     }
-
-
-    static final String SZ_FORMAT = "%06d";
 }

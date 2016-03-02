@@ -42,7 +42,7 @@ public class DataStoreImpl implements DataStore {
                 offset += 4 + sz;
             }
         } catch (IOException | ClassNotFoundException ex) {
-            LOG.error("", ex);
+            LOG.error(String.format("Table %s loading completed.", meta.getName()), ex);
             throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s loading completed.", meta.getName()));

@@ -82,7 +82,6 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         if (store == null) {
             throw new TableNotFoundException(table);
         }
-
         Data data = store.get(key);
         Row row = new Row();
         row.setKey(key);
@@ -96,7 +95,6 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         if (store == null) {
             throw new TableNotFoundException(table);
         }
-
         Data data = new Data(key, val);
         store.set(data);
     }

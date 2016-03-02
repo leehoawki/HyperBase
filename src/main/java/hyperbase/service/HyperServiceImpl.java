@@ -72,8 +72,12 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
 
     @Override
     public void deleteTable(String table) {
-        dataStores.remove(table);
         metaStore.delete(table);
+        DataStore ds = dataStores.get(table);
+        if (ds != null) {
+            ds.destroy();
+            dataStores.remove(table);
+        }
     }
 
     @Override

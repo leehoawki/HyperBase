@@ -4,9 +4,7 @@ package hyperbase.data;
 import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,6 +16,10 @@ public class DataStoreImpl implements DataStore {
 
     Meta meta;
 
+    int curr;
+
+    static final int FILE_SZ = 20 * 1024 * 1024;
+
     public DataStoreImpl(Meta meta) {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<String, Hint>();
@@ -26,24 +28,28 @@ public class DataStoreImpl implements DataStore {
     @Override
     public void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
-        try (FileInputStream fr = new FileInputStream(meta.getPath())) {
-            int offset = 0;
-            while (true) {
-                byte[] bsz = new byte[4];
-                int re = fr.read(bsz);
-                if (re != 4) {
-                    break;
+        for (int i = 0; ; i++) {
+            try (FileInputStream fr = new FileInputStream(meta.getPath() + "." + i)) {
+                int offset = 0;
+                while (true) {
+                    byte[] bsz = new byte[4];
+                    int re = fr.read(bsz);
+                    if (re != 4) {
+                        break;
+                    }
+                    int sz = bytesToInt(bsz);
+                    byte[] data = new byte[sz];
+                    fr.read(data);
+                    String key = Data.deserialize(data).key;
+                    hints.put(key, new Hint(key, meta.getPath() + "." + i, offset));
+                    offset += 4 + sz;
                 }
-                int sz = bytesToInt(bsz);
-                byte[] data = new byte[sz];
-                fr.read(data);
-                String key = Data.deserialize(data).key;
-                hints.put(key, new Hint(key, meta.getPath(), offset));
-                offset += 4 + sz;
+            } catch (FileNotFoundException ex) {
+                break;
+            } catch (IOException | ClassNotFoundException ex) {
+                LOG.error(String.format("Table %s loading completed.", meta.getName()), ex);
+                throw new IllegalStateException(ex);
             }
-        } catch (IOException | ClassNotFoundException ex) {
-            LOG.error(String.format("Table %s loading completed.", meta.getName()), ex);
-            throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s loading completed.", meta.getName()));
     }
@@ -56,6 +62,20 @@ public class DataStoreImpl implements DataStore {
     }
 
     @Override
+    public void destroy() {
+        LOG.info(String.format("Table %s destroy in progress...", meta.getName()));
+        for (int i = 0; ; i++) {
+            File f = new File(meta.getPath() + "." + i);
+            if (f.exists()) {
+                f.delete();
+            } else {
+                break;
+            }
+        }
+        LOG.info(String.format("Table %s destroy completed.", meta.getName()));
+    }
+
+    @Override
     public void set(String key, String val) {
         Data d = new Data(key, val);
         set(d);
@@ -63,9 +83,15 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(Data data) {
-        try (RandomAccessFile file = new RandomAccessFile(meta.getPath(), "rw")) {
+        File f = new File(meta.getPath() + "." + curr);
+        if (f.length() > FILE_SZ) {
+            curr += 1;
+            f = new File(meta.getPath() + "." + curr);
+        }
+
+        try (RandomAccessFile file = new RandomAccessFile(f, "rw")) {
             byte[] cell = Data.serialize(data);
-            hints.put(data.key, new Hint(data.key, meta.getPath(), file.length()));
+            hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), file.length()));
             file.seek(file.length());
             file.write(intToBytes(cell.length));
             file.write(cell);
@@ -81,6 +107,7 @@ public class DataStoreImpl implements DataStore {
         if (hint == null) {
             return new Data(key, null);
         }
+
         try (RandomAccessFile file = new RandomAccessFile(hint.fileName, "rw")) {
             file.seek(hint.offset);
             byte[] sz = new byte[4];

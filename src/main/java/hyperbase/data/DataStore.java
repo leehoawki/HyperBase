@@ -11,4 +11,6 @@ public interface DataStore {
     public void restore();
 
     public void merge();
+
+    public void destroy();
 }

@@ -47,7 +47,7 @@ public class DataStoreImpl implements DataStore {
             } catch (FileNotFoundException ex) {
                 break;
             } catch (IOException | ClassNotFoundException ex) {
-                LOG.error(String.format("Table %s loading completed.", meta.getName()), ex);
+                LOG.error(String.format("Table %s loading failed.", meta.getName()), ex);
                 throw new IllegalStateException(ex);
             }
         }

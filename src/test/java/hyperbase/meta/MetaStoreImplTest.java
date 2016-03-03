@@ -3,7 +3,7 @@ package hyperbase.meta;
 import junit.framework.TestCase;
 import org.junit.Test;
 
-public class MetaStoreTest extends TestCase {
+public class MetaStoreImplTest extends TestCase {
 
     @Override
     public void setUp() {

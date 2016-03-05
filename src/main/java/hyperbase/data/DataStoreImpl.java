@@ -110,21 +110,24 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(Data data) {
-        FutureTask<Void> ft = new FutureTask<>(() -> {
-            if (new File(getFilePath(meta.getPath(), curr)).length() > FILE_SZ) {
-                curr += 1;
-            }
-            final File f = new File(getFilePath(meta.getPath(), curr));
-            try {
-                byte[] cell = Data.serialize(data);
-                hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length()));
-                fos.write(intToBytes(cell.length));
-                fos.write(cell);
-                fos.flush();
-                return null;
-            } catch (IOException ex) {
-                LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
-                throw new IllegalStateException(ex);
+        FutureTask<Void> ft = new FutureTask<>(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                if (new File(getFilePath(meta.getPath(), curr)).length() > FILE_SZ) {
+                    curr += 1;
+                }
+                final File f = new File(getFilePath(meta.getPath(), curr));
+                try {
+                    byte[] cell = Data.serialize(data);
+                    hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length()));
+                    fos.write(intToBytes(cell.length));
+                    fos.write(cell);
+                    fos.flush();
+                    return null;
+                } catch (IOException ex) {
+                    LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
+                    throw new IllegalStateException(ex);
+                }
             }
         });
         es.submit(ft);

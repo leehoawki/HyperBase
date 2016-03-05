@@ -28,7 +28,7 @@ public class DataStoreImpl implements DataStore {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<>();
         try {
-            fos = new FileOutputStream(getFilePath(meta.getPath(), curr),true);
+            fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
         } catch (IOException ex) {
             LOG.error(ex);
             throw new IllegalStateException(ex);
@@ -66,7 +66,7 @@ public class DataStoreImpl implements DataStore {
 
         try {
             fos.close();
-            fos = new FileOutputStream(getFilePath(meta.getPath(), curr),true);
+            fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
         } catch (IOException ex) {
             LOG.error(ex);
             throw new IllegalStateException(ex);
@@ -110,7 +110,7 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(Data data) {
-        FutureTask<Void> ft = new FutureTask(() -> {
+        FutureTask<Void> ft = new FutureTask<>(() -> {
             if (new File(getFilePath(meta.getPath(), curr)).length() > FILE_SZ) {
                 curr += 1;
             }
@@ -166,10 +166,10 @@ public class DataStoreImpl implements DataStore {
 
     static int bytesToInt(byte[] src) {
         int value;
-        value = (int) (((src[0] & 0xFF) << 24)
+        value = ((src[0] & 0xFF) << 24)
                 | ((src[1] & 0xFF) << 16)
                 | ((src[2] & 0xFF) << 8)
-                | (src[3] & 0xFF));
+                | (src[3] & 0xFF);
         return value;
     }
 

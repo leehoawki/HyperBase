@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 public class DataStoreImpl implements DataStore {
 
@@ -16,19 +16,31 @@ public class DataStoreImpl implements DataStore {
 
     Meta meta;
 
-    int curr;
+    volatile int curr;
+
+    FileOutputStream fos;
+
+    ExecutorService es;
 
     static final int FILE_SZ = 20 * 1024 * 1024;
 
     public DataStoreImpl(Meta meta) {
         this.meta = meta;
-        this.hints = new ConcurrentHashMap<String, Hint>();
+        this.hints = new ConcurrentHashMap<>();
+        try {
+            fos = new FileOutputStream(getFilePath(meta.getPath(), curr),true);
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw new IllegalStateException(ex);
+        }
+        es = Executors.newSingleThreadExecutor();
     }
+
 
     @Override
     public void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
-        for (int i = 0; ; i++) {
+        for (int i = 0; ; curr = i, i++) {
             try (FileInputStream fr = new FileInputStream(meta.getPath() + "." + i)) {
                 int offset = 0;
                 while (true) {
@@ -51,6 +63,14 @@ public class DataStoreImpl implements DataStore {
                 throw new IllegalStateException(ex);
             }
         }
+
+        try {
+            fos.close();
+            fos = new FileOutputStream(getFilePath(meta.getPath(), curr),true);
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw new IllegalStateException(ex);
+        }
         LOG.info(String.format("Table %s loading completed.", meta.getName()));
     }
 
@@ -64,13 +84,20 @@ public class DataStoreImpl implements DataStore {
     @Override
     public void destroy() {
         LOG.info(String.format("Table %s destroy in progress...", meta.getName()));
-        for (int i = 0; ; i++) {
-            File f = new File(meta.getPath() + "." + i);
-            if (f.exists()) {
-                f.delete();
-            } else {
-                break;
+        es.shutdownNow();
+        try {
+            fos.close();
+            for (int i = 0; ; i++) {
+                File f = new File(getFilePath(meta.getPath(), i));
+                if (f.exists()) {
+                    f.delete();
+                } else {
+                    break;
+                }
             }
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s destroy completed.", meta.getName()));
     }
@@ -83,20 +110,27 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(Data data) {
-        File f = new File(meta.getPath() + "." + curr);
-        if (f.length() > FILE_SZ) {
-            curr += 1;
-            f = new File(meta.getPath() + "." + curr);
-        }
-
-        try (RandomAccessFile file = new RandomAccessFile(f, "rw")) {
-            byte[] cell = Data.serialize(data);
-            hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), file.length()));
-            file.seek(file.length());
-            file.write(intToBytes(cell.length));
-            file.write(cell);
-        } catch (IOException ex) {
-            LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
+        FutureTask<Void> ft = new FutureTask(() -> {
+            if (new File(getFilePath(meta.getPath(), curr)).length() > FILE_SZ) {
+                curr += 1;
+            }
+            final File f = new File(getFilePath(meta.getPath(), curr));
+            try {
+                byte[] cell = Data.serialize(data);
+                hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length()));
+                fos.write(intToBytes(cell.length));
+                fos.write(cell);
+                fos.flush();
+                return null;
+            } catch (IOException ex) {
+                LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
+                throw new IllegalStateException(ex);
+            }
+        });
+        es.submit(ft);
+        try {
+            ft.get();
+        } catch (ExecutionException | InterruptedException ex) {
             throw new IllegalStateException(ex);
         }
     }
@@ -137,5 +171,9 @@ public class DataStoreImpl implements DataStore {
                 | ((src[2] & 0xFF) << 8)
                 | (src[3] & 0xFF));
         return value;
+    }
+
+    static String getFilePath(String path, int curr) {
+        return path + "." + curr;
     }
 }

@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Service
 public class HyperServiceImpl implements HyperService, InitializingBean {
@@ -36,7 +38,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         LOG.info("DataStores loading.");
-        dataStores = new HashMap<String, DataStore>();
+        dataStores = new ConcurrentHashMap<>();
         for (Meta meta : metaStore.getAllMeta()) {
             DataStore ds = storeFactory.createStore(meta);
             ds.restore();
@@ -47,7 +49,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
 
     @Override
     public List<Table> getTables() {
-        List<Table> tables = new ArrayList<Table>();
+        List<Table> tables = new ArrayList<>();
         for (Meta m : metaStore.getAllMeta()) {
             Table table = new Table();
             table.setName(m.getName());
@@ -67,7 +69,8 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     @Override
     public void createTable(String table) {
         Meta meta = metaStore.add(table);
-        dataStores.put(table, storeFactory.createStore(meta));
+        DataStore ds = storeFactory.createStore(meta);
+        dataStores.put(table, ds);
     }
 
     @Override

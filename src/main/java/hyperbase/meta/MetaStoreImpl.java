@@ -43,7 +43,7 @@ public class MetaStoreImpl implements MetaStore {
             this.pc = new PropertiesConfiguration(f);
             tc = pc.subset("TABLE");
             Iterator<String> keys = tc.getKeys();
-            metas = new ConcurrentHashMap<String, Meta>();
+            metas = new ConcurrentHashMap<>();
             while (keys.hasNext()) {
                 String key = keys.next();
                 metas.put(key, new Meta(key, tc.getString(key)));

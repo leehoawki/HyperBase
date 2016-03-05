@@ -7,6 +7,8 @@ import hyperbase.meta.MetaStoreImpl;
 import junit.framework.TestCase;
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class DataStoreImplTest extends TestCase {
     MetaStore mstore;
 
@@ -26,8 +28,8 @@ public class DataStoreImplTest extends TestCase {
 
     @Override
     public void tearDown() {
-        mstore.delete(name);
         store.destroy();
+        mstore.delete(name);
     }
 
     @Test
@@ -49,20 +51,20 @@ public class DataStoreImplTest extends TestCase {
     }
 
     @Test
-    public void testRestore() {
+    public void testRestore() throws IOException {
         store.set("1", "A");
         store.set("1", "B");
         store.set("1", "A");
         store.set("2", "B");
         store.set("3", "A");
         store.set("3", null);
-
         DataStore store2 = new DataStoreImpl(meta);
         store2.restore();
 
         assertEquals(store2.get("1").getVal(), "A");
         assertEquals(store2.get("2").getVal(), "B");
         assertEquals(store2.get("3").getVal(), null);
+        store2.destroy();
     }
 
     @Test
@@ -88,5 +90,6 @@ public class DataStoreImplTest extends TestCase {
         assertEquals(store2.get("5").getVal(), "G");
         assertEquals(store2.get("6").getVal(), "H");
         assertEquals(store2.get("7").getVal(), "I");
+        store2.destroy();
     }
 }

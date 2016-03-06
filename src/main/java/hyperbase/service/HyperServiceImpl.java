@@ -38,8 +38,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         LOG.info("DataStores loading.");
         dataStores = new ConcurrentHashMap<>();
         for (Meta meta : metaStore.getAllMeta()) {
-            DataStore ds = storeFactory.createStore(meta);
-            ds.restore();
+            DataStore ds = storeFactory.restoreStore(meta);
             dataStores.put(meta.getName(), ds);
         }
         LOG.info("DataStores loaded.");
@@ -100,7 +99,6 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         if (store == null) {
             throw new TableNotFoundException(table);
         }
-        Data data = new Data(key, val);
-        store.set(data);
+        store.set(key, val);
     }
 }

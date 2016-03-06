@@ -10,7 +10,6 @@ import org.junit.Test;
 import java.io.IOException;
 
 public class DataStoreImplTest extends TestCase {
-    MetaStore mstore;
 
     DataStoreImpl store;
 
@@ -18,12 +17,15 @@ public class DataStoreImplTest extends TestCase {
 
     String name = "test";
 
+    MetaStore mstore = new MetaStoreImpl();
+
+    DataStoreFactory sdf = new DataStoreFactoryImpl();
+
     @Override
     public void setUp() {
-        mstore = new MetaStoreImpl();
         mstore.add(name);
         meta = mstore.getMeta(name);
-        store = new DataStoreImpl(meta);
+        store = (DataStoreImpl) sdf.createStore(meta);
     }
 
     @Override
@@ -58,8 +60,7 @@ public class DataStoreImplTest extends TestCase {
         store.set("2", "B");
         store.set("3", "A");
         store.set("3", null);
-        DataStore store2 = new DataStoreImpl(meta);
-        store2.restore();
+        DataStore store2 = sdf.restoreStore(meta);
 
         assertEquals(store2.get("1").getVal(), "A");
         assertEquals(store2.get("2").getVal(), "B");
@@ -81,8 +82,7 @@ public class DataStoreImplTest extends TestCase {
         store.set("6", "H");
         store.set("7", "I");
 
-        DataStore store2 = new DataStoreImpl(meta);
-        store2.restore();
+        DataStore store2 = sdf.restoreStore(meta);
         assertEquals(store2.get("1").getVal(), "D");
         assertEquals(store2.get("2").getVal(), "E");
         assertEquals(store2.get("3").getVal(), "C");
@@ -91,5 +91,10 @@ public class DataStoreImplTest extends TestCase {
         assertEquals(store2.get("6").getVal(), "H");
         assertEquals(store2.get("7").getVal(), "I");
         store2.destroy();
+    }
+
+    @Test
+    public void testMerge() {
+
     }
 }

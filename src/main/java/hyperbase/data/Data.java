@@ -9,9 +9,12 @@ public class Data implements Serializable {
 
     String val;
 
-    public Data(String key, String val) {
+    long timestamp;
+
+    public Data(String key, String val, long timestamp) {
         this.key = key;
         this.val = val;
+        this.timestamp = timestamp;
     }
 
     public String getKey() {
@@ -20,6 +23,10 @@ public class Data implements Serializable {
 
     public String getVal() {
         return val;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     static Data deserialize(byte[] bytes) throws IOException, ClassNotFoundException {

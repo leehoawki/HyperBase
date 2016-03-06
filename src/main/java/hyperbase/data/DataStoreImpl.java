@@ -5,6 +5,7 @@ import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -16,29 +17,37 @@ public class DataStoreImpl implements DataStore {
 
     Meta meta;
 
-    volatile int curr;
-
     FileOutputStream fos;
 
     ExecutorService es;
 
-    static final int FILE_SZ = 20 * 1024 * 1024;
+    volatile int curr;
+
+    volatile boolean online;
 
     public DataStoreImpl(Meta meta) {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<>();
-        try {
-            fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw new IllegalStateException(ex);
-        }
+
         es = Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    public synchronized void online() {
+        if (!online) {
+            try {
+                fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
+            } catch (IOException ex) {
+                LOG.error(ex);
+                throw new IllegalStateException(ex);
+            }
+        }
+        online = true;
     }
 
 
     @Override
-    public void restore() {
+    public synchronized void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
         for (int i = 0; ; curr = i, i++) {
             try (FileInputStream fr = new FileInputStream(meta.getPath() + "." + i)) {
@@ -50,10 +59,10 @@ public class DataStoreImpl implements DataStore {
                         break;
                     }
                     int sz = bytesToInt(bsz);
-                    byte[] data = new byte[sz];
-                    fr.read(data);
-                    String key = Data.deserialize(data).key;
-                    hints.put(key, new Hint(key, meta.getPath() + "." + i, offset));
+                    byte[] bytes = new byte[sz];
+                    fr.read(bytes);
+                    Data data = Data.deserialize(bytes);
+                    hints.put(data.key, new Hint(data.key, meta.getPath() + "." + i, offset, data.timestamp));
                     offset += 4 + sz;
                 }
             } catch (FileNotFoundException ex) {
@@ -63,21 +72,16 @@ public class DataStoreImpl implements DataStore {
                 throw new IllegalStateException(ex);
             }
         }
-
-        try {
-            fos.close();
-            fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw new IllegalStateException(ex);
-        }
         LOG.info(String.format("Table %s loading completed.", meta.getName()));
     }
 
     @Override
-    public void merge() {
+    public synchronized void merge() {
         LOG.info(String.format("Table %s merging in progress...", meta.getName()));
-        //TODO
+        int to = curr;
+        for (int i = 0; i < to; i++) {
+
+        }
         LOG.info(String.format("Table %s merging completed.", meta.getName()));
     }
 
@@ -104,7 +108,8 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(String key, String val) {
-        Data d = new Data(key, val);
+        long timestamp = new Date().getTime();
+        Data d = new Data(key, val, timestamp);
         set(d);
     }
 
@@ -113,13 +118,14 @@ public class DataStoreImpl implements DataStore {
         FutureTask<Void> ft = new FutureTask<>(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                if (new File(getFilePath(meta.getPath(), curr)).length() > FILE_SZ) {
+                File f = new File(getFilePath(meta.getPath(), curr));
+                if (f.length() > FILE_SZ) {
                     curr += 1;
+                    f = new File(getFilePath(meta.getPath(), curr));
                 }
-                final File f = new File(getFilePath(meta.getPath(), curr));
                 try {
                     byte[] cell = Data.serialize(data);
-                    hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length()));
+                    hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length(), data.timestamp));
                     fos.write(intToBytes(cell.length));
                     fos.write(cell);
                     fos.flush();
@@ -142,7 +148,7 @@ public class DataStoreImpl implements DataStore {
     public Data get(String key) {
         Hint hint = hints.get(key);
         if (hint == null) {
-            return new Data(key, null);
+            return new Data(key, null, 0L);
         }
 
         try (RandomAccessFile file = new RandomAccessFile(hint.fileName, "rw")) {
@@ -179,4 +185,6 @@ public class DataStoreImpl implements DataStore {
     static String getFilePath(String path, int curr) {
         return path + "." + curr;
     }
+
+    static final int FILE_SZ = 20 * 1024 * 1024;
 }

@@ -13,4 +13,6 @@ public interface DataStore {
     public void merge();
 
     public void destroy();
+
+    public void online();
 }

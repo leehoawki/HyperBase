@@ -9,9 +9,12 @@ public class Hint {
 
     long offset;
 
-    public Hint(String key, String name, long offset) {
+    long timestamp;
+
+    public Hint(String key, String name, long offset, long timestamp) {
         this.key = key;
         this.fileName = name;
         this.offset = offset;
+        this.timestamp = timestamp;
     }
 }

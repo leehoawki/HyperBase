@@ -89,9 +89,7 @@ public class DataStoreImpl implements DataStore {
                     byte[] bytes = new byte[sz];
                     fr.read(bytes);
                     Data data = Data.deserialize(bytes);
-
                     hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), offset, data.timestamp));
-
                     offset += 4 + sz;
                 }
             } catch (IOException | ClassNotFoundException ex) {
@@ -187,7 +185,7 @@ public class DataStoreImpl implements DataStore {
     }
 
     String getPath() {
-        return String.format("%s/%s.%s", meta.getPath(), fileNamePrefix, curr);
+        return String.format("%s/%s.%06d", meta.getPath(), fileNamePrefix, curr);
     }
 
     static byte[] intToBytes(int value) {

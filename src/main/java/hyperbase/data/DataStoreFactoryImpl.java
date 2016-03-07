@@ -13,7 +13,6 @@ public class DataStoreFactoryImpl implements DataStoreFactory {
     @Override
     public DataStore createStore(Meta meta) {
         DataStore store = new DataStoreImpl(meta);
-        store.online();
         return store;
     }
 
@@ -21,7 +20,6 @@ public class DataStoreFactoryImpl implements DataStoreFactory {
     public DataStore restoreStore(Meta meta) {
         DataStore store = new DataStoreImpl(meta);
         store.restore();
-        store.online();
         return store;
     }
 }

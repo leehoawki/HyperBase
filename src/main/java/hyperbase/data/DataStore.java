@@ -15,4 +15,6 @@ public interface DataStore {
     public void destroy();
 
     public void online();
+
+    public void offline();
 }

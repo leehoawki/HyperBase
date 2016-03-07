@@ -26,10 +26,12 @@ public class DataStoreImplTest extends TestCase {
         mstore.add(name);
         meta = mstore.getMeta(name);
         store = (DataStoreImpl) sdf.createStore(meta);
+        store.online();
     }
 
     @Override
     public void tearDown() {
+        store.offline();
         store.destroy();
         mstore.delete(name);
     }
@@ -45,7 +47,7 @@ public class DataStoreImplTest extends TestCase {
         store.set("3", null);
         store.set("3", "");
         store.set("", "A");
-
+        store.offline();
         assertEquals(store.get("1").getVal(), "A");
         assertEquals(store.get("2").getVal(), "BBBBBBBBBB");
         assertEquals(store.get("3").getVal(), "");
@@ -60,11 +62,13 @@ public class DataStoreImplTest extends TestCase {
         store.set("2", "B");
         store.set("3", "A");
         store.set("3", null);
+        store.offline();
+        sdf.restoreStore(meta);
         DataStore store2 = sdf.restoreStore(meta);
-
         assertEquals(store2.get("1").getVal(), "A");
         assertEquals(store2.get("2").getVal(), "B");
         assertEquals(store2.get("3").getVal(), null);
+        store2.offline();
         store2.destroy();
     }
 
@@ -81,6 +85,7 @@ public class DataStoreImplTest extends TestCase {
         store.set("5", "G");
         store.set("6", "H");
         store.set("7", "I");
+        store.offline();
 
         DataStore store2 = sdf.restoreStore(meta);
         assertEquals(store2.get("1").getVal(), "D");
@@ -90,6 +95,7 @@ public class DataStoreImplTest extends TestCase {
         assertEquals(store2.get("5").getVal(), "G");
         assertEquals(store2.get("6").getVal(), "H");
         assertEquals(store2.get("7").getVal(), "I");
+        store2.offline();
         store2.destroy();
     }
 

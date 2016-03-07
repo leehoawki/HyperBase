@@ -39,6 +39,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         dataStores = new ConcurrentHashMap<>();
         for (Meta meta : metaStore.getAllMeta()) {
             DataStore ds = storeFactory.restoreStore(meta);
+            ds.online();
             dataStores.put(meta.getName(), ds);
         }
         LOG.info("DataStores loaded.");
@@ -67,6 +68,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
     public void createTable(String table) {
         Meta meta = metaStore.add(table);
         DataStore ds = storeFactory.createStore(meta);
+        ds.online();
         dataStores.put(table, ds);
     }
 
@@ -75,6 +77,7 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
         metaStore.delete(table);
         DataStore ds = dataStores.get(table);
         if (ds != null) {
+            ds.offline();
             ds.destroy();
             dataStores.remove(table);
         }

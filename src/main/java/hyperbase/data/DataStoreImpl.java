@@ -7,7 +7,10 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class DataStoreImpl implements DataStore {
 
@@ -28,14 +31,13 @@ public class DataStoreImpl implements DataStore {
     public DataStoreImpl(Meta meta) {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<>();
-
-        es = Executors.newSingleThreadExecutor();
     }
 
     @Override
     public synchronized void online() {
         if (!online) {
             try {
+                es = Executors.newSingleThreadExecutor();
                 fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
             } catch (IOException ex) {
                 LOG.error(ex);
@@ -43,6 +45,23 @@ public class DataStoreImpl implements DataStore {
             }
         }
         online = true;
+    }
+
+    @Override
+    public synchronized void offline() {
+        if (online) {
+            try {
+                es.shutdown();
+                es.awaitTermination(10, TimeUnit.SECONDS);
+                fos.close();
+            } catch (IOException ex) {
+                LOG.error(ex);
+                throw new IllegalStateException(ex);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        online = false;
     }
 
 
@@ -88,20 +107,13 @@ public class DataStoreImpl implements DataStore {
     @Override
     public void destroy() {
         LOG.info(String.format("Table %s destroy in progress...", meta.getName()));
-        es.shutdownNow();
-        try {
-            fos.close();
-            for (int i = 0; ; i++) {
-                File f = new File(getFilePath(meta.getPath(), i));
-                if (f.exists()) {
-                    f.delete();
-                } else {
-                    break;
-                }
+        for (int i = 0; ; i++) {
+            File f = new File(getFilePath(meta.getPath(), i));
+            if (f.exists()) {
+                f.delete();
+            } else {
+                break;
             }
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw new IllegalStateException(ex);
         }
         LOG.info(String.format("Table %s destroy completed.", meta.getName()));
     }
@@ -115,9 +127,9 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(Data data) {
-        FutureTask<Void> ft = new FutureTask<>(new Callable<Void>() {
+        es.execute(new Runnable() {
             @Override
-            public Void call() throws Exception {
+            public void run() {
                 File f = new File(getFilePath(meta.getPath(), curr));
                 if (f.length() > FILE_SZ) {
                     curr += 1;
@@ -129,19 +141,12 @@ public class DataStoreImpl implements DataStore {
                     fos.write(intToBytes(cell.length));
                     fos.write(cell);
                     fos.flush();
-                    return null;
                 } catch (IOException ex) {
                     LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
                     throw new IllegalStateException(ex);
                 }
             }
         });
-        es.submit(ft);
-        try {
-            ft.get();
-        } catch (ExecutionException | InterruptedException ex) {
-            throw new IllegalStateException(ex);
-        }
     }
 
     @Override

@@ -29,7 +29,7 @@ public class MetaStoreImpl implements MetaStore {
     Map<String, Meta> metas;
 
     public MetaStoreImpl() {
-        this(MetaStoreImpl.class.getResource("/").getPath() + "/hyper.ctl");
+        this(DEFAULT_DIR + "/hyper.ctl");
     }
 
     public MetaStoreImpl(String filePath) {
@@ -59,7 +59,7 @@ public class MetaStoreImpl implements MetaStore {
 
     @Override
     public Meta add(String name) {
-        Meta meta = new Meta(name, String.format("/%s/hyper.%s.data", MetaStoreImpl.class.getResource("/").getPath(), name));
+        Meta meta = new Meta(name, DEFAULT_DIR);
         add(meta);
         return meta;
     }
@@ -112,4 +112,6 @@ public class MetaStoreImpl implements MetaStore {
             throw new IllegalStateException(ex);
         }
     }
+
+    static final String DEFAULT_DIR = MetaStoreImpl.class.getResource("/").getPath();
 }

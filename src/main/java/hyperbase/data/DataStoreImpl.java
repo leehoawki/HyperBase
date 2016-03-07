@@ -5,12 +5,14 @@ import hyperbase.meta.Meta;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DataStoreImpl implements DataStore {
 
@@ -19,6 +21,8 @@ public class DataStoreImpl implements DataStore {
     Map<String, Hint> hints;
 
     Meta meta;
+
+    String fileNamePrefix;
 
     FileOutputStream fos;
 
@@ -31,6 +35,7 @@ public class DataStoreImpl implements DataStore {
     public DataStoreImpl(Meta meta) {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<>();
+        this.fileNamePrefix = String.format("hyper.data.%s", meta.getName());
     }
 
     @Override
@@ -38,13 +43,13 @@ public class DataStoreImpl implements DataStore {
         if (!online) {
             try {
                 es = Executors.newSingleThreadExecutor();
-                fos = new FileOutputStream(getFilePath(meta.getPath(), curr), true);
+                fos = new FileOutputStream(getPath(), true);
             } catch (IOException ex) {
                 LOG.error(ex);
                 throw new IllegalStateException(ex);
             }
+            online = true;
         }
-        online = true;
     }
 
     @Override
@@ -60,16 +65,19 @@ public class DataStoreImpl implements DataStore {
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
+            online = false;
         }
-        online = false;
     }
 
 
     @Override
     public synchronized void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
-        for (int i = 0; ; curr = i, i++) {
-            try (FileInputStream fr = new FileInputStream(meta.getPath() + "." + i)) {
+        File dir = new File(meta.getPath());
+
+        for (File f : Arrays.stream(dir.listFiles(x -> x.getName().
+                startsWith(fileNamePrefix))).sorted().collect(Collectors.toList())) {
+            try (FileInputStream fr = new FileInputStream(f)) {
                 int offset = 0;
                 while (true) {
                     byte[] bsz = new byte[4];
@@ -81,16 +89,17 @@ public class DataStoreImpl implements DataStore {
                     byte[] bytes = new byte[sz];
                     fr.read(bytes);
                     Data data = Data.deserialize(bytes);
-                    hints.put(data.key, new Hint(data.key, meta.getPath() + "." + i, offset, data.timestamp));
+
+                    hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), offset, data.timestamp));
+
                     offset += 4 + sz;
                 }
-            } catch (FileNotFoundException ex) {
-                break;
             } catch (IOException | ClassNotFoundException ex) {
                 LOG.error(String.format("Table %s loading failed.", meta.getName()), ex);
                 throw new IllegalStateException(ex);
             }
         }
+
         LOG.info(String.format("Table %s loading completed.", meta.getName()));
     }
 
@@ -98,22 +107,17 @@ public class DataStoreImpl implements DataStore {
     public synchronized void merge() {
         LOG.info(String.format("Table %s merging in progress...", meta.getName()));
         int to = curr;
-        for (int i = 0; i < to; i++) {
+        File dir = new File(meta.getPath());
 
-        }
         LOG.info(String.format("Table %s merging completed.", meta.getName()));
     }
 
     @Override
-    public void destroy() {
+    public synchronized void destroy() {
         LOG.info(String.format("Table %s destroy in progress...", meta.getName()));
-        for (int i = 0; ; i++) {
-            File f = new File(getFilePath(meta.getPath(), i));
-            if (f.exists()) {
-                f.delete();
-            } else {
-                break;
-            }
+        File dir = new File(meta.getPath());
+        for (File f : dir.listFiles(x -> x.getName().startsWith(fileNamePrefix))) {
+            f.delete();
         }
         LOG.info(String.format("Table %s destroy completed.", meta.getName()));
     }
@@ -127,24 +131,26 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public void set(Data data) {
-        es.execute(new Runnable() {
-            @Override
-            public void run() {
-                File f = new File(getFilePath(meta.getPath(), curr));
-                if (f.length() > FILE_SZ) {
-                    curr += 1;
-                    f = new File(getFilePath(meta.getPath(), curr));
+        es.execute(() -> {
+            File f = new File(getPath());
+            if (f.length() > FILE_SZ) {
+                synchronized (this) {
+                    f = new File(getPath());
+                    if (f.length() > FILE_SZ) {
+                        archive();
+                        f = new File(getPath());
+                    }
                 }
-                try {
-                    byte[] cell = Data.serialize(data);
-                    hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length(), data.timestamp));
-                    fos.write(intToBytes(cell.length));
-                    fos.write(cell);
-                    fos.flush();
-                } catch (IOException ex) {
-                    LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
-                    throw new IllegalStateException(ex);
-                }
+            }
+            try {
+                byte[] cell = Data.serialize(data);
+                hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length(), data.timestamp));
+                fos.write(intToBytes(cell.length));
+                fos.write(cell);
+                fos.flush();
+            } catch (IOException ex) {
+                LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
+                throw new IllegalStateException(ex);
             }
         });
     }
@@ -169,6 +175,21 @@ public class DataStoreImpl implements DataStore {
         }
     }
 
+    synchronized void archive() {
+        curr += 1;
+        try {
+            fos.close();
+            fos = new FileOutputStream(getPath(), true);
+        } catch (IOException ex) {
+            LOG.error(ex);
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    String getPath() {
+        return String.format("%s/%s.%s", meta.getPath(), fileNamePrefix, curr);
+    }
+
     static byte[] intToBytes(int value) {
         byte[] src = new byte[4];
         src[0] = (byte) ((value >> 24) & 0xFF);
@@ -187,9 +208,6 @@ public class DataStoreImpl implements DataStore {
         return value;
     }
 
-    static String getFilePath(String path, int curr) {
-        return path + "." + curr;
-    }
 
     static final int FILE_SZ = 20 * 1024 * 1024;
 }

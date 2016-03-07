@@ -77,11 +77,11 @@ public class DataStoreImplTest extends TestCase {
         store.set("1", "A");
         store.set("2", "B");
         store.set("3", "C");
-        store.curr += 1;
+        store.archive();
         store.set("1", "D");
         store.set("2", "E");
         store.set("4", "F");
-        store.curr += 1;
+        store.archive();
         store.set("5", "G");
         store.set("6", "H");
         store.set("7", "I");

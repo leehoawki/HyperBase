@@ -2,12 +2,11 @@ package hyperbase.data;
 
 
 import hyperbase.meta.Meta;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -76,7 +75,12 @@ public class DataStoreImpl implements DataStore {
         File dir = new File(meta.getPath());
 
         for (File f : Arrays.stream(dir.listFiles(x -> x.getName().
-                startsWith(fileNamePrefix))).sorted().collect(Collectors.toList())) {
+                startsWith(fileNamePrefix))).
+                sorted((o1, o2) -> {
+                    String[] a1 = StringUtils.split(o1.getName(), '/');
+                    String[] a2 = StringUtils.split(o2.getName(), '/');
+                    return a1[a1.length - 1].compareTo(a2[a2.length - 1]);
+                }).collect(Collectors.toList())) {
             try (FileInputStream fr = new FileInputStream(f)) {
                 int offset = 0;
                 while (true) {
@@ -104,9 +108,69 @@ public class DataStoreImpl implements DataStore {
     @Override
     public synchronized void merge() {
         LOG.info(String.format("Table %s merging in progress...", meta.getName()));
-        int to = curr;
-        File dir = new File(meta.getPath());
+        if (curr == 0) {
+            return;
+        }
+        int to = curr - 1;
+        if (!new File(getArchivePath(to)).exists()) {
+            return;
+        }
 
+        File dir = new File(meta.getPath());
+        Map<String, Hint> nhints = new HashMap<>();
+        int count = 1;
+        try {
+            File nf = new File(getMergePath(to, count));
+            List<File> files = Arrays.stream(dir.listFiles(x -> x.getName().
+                    startsWith(fileNamePrefix))).
+                    filter(file -> {
+                        String[] a1 = StringUtils.split(file.getName(), '/');
+                        String[] a2 = StringUtils.split(getPath(), '/');
+                        return a1[a1.length - 1].compareTo(a2[a2.length - 1]) < 0;
+                    }).collect(Collectors.toList());
+            List<File> toDeleteList = new ArrayList<>();
+            FileOutputStream nfos = new FileOutputStream(nf);
+            int offset = 0;
+
+            for (File f : files) {
+                toDeleteList.add(f);
+                FileInputStream fis = new FileInputStream(f);
+                if (nf.length() > FILE_SZ) {
+                    count += 1;
+                    nf = new File(getMergePath(to, count));
+                    nfos.close();
+                    nfos = new FileOutputStream(nf);
+                    offset = 0;
+                }
+                while (true) {
+                    byte[] bsz = new byte[4];
+                    int re = fis.read(bsz);
+                    if (re != 4) {
+                        break;
+                    }
+                    int sz = bytesToInt(bsz);
+                    byte[] bytes = new byte[sz];
+                    fis.read(bytes);
+                    Data data = Data.deserialize(bytes);
+                    Hint h = hints.get(data.key);
+                    if (h.timestamp == data.timestamp && h.fileName.equals(f.getAbsolutePath())) {
+                        nhints.put(data.key, new Hint(data.key, nf.getAbsolutePath(), offset, data.timestamp));
+                        nfos.write(bsz);
+                        nfos.write(bytes);
+                        offset += 4 + sz;
+                    }
+                }
+                fis.close();
+            }
+            nfos.close();
+            hints.putAll(nhints);
+            for (File f : toDeleteList) {
+                f.delete();
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.error(ex);
+            throw new IllegalStateException(ex);
+        }
         LOG.info(String.format("Table %s merging completed.", meta.getName()));
     }
 
@@ -145,7 +209,6 @@ public class DataStoreImpl implements DataStore {
                 hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), f.length(), data.timestamp));
                 fos.write(intToBytes(cell.length));
                 fos.write(cell);
-                fos.flush();
             } catch (IOException ex) {
                 LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
                 throw new IllegalStateException(ex);
@@ -185,7 +248,15 @@ public class DataStoreImpl implements DataStore {
     }
 
     String getPath() {
-        return String.format("%s/%s.%06d", meta.getPath(), fileNamePrefix, curr);
+        return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, curr);
+    }
+
+    String getArchivePath(int arch) {
+        return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, arch);
+    }
+
+    String getMergePath(int to, int arch) {
+        return String.format("%s/%s.%03d%03d", meta.getPath(), fileNamePrefix, to, arch);
     }
 
     static byte[] intToBytes(int value) {

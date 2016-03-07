@@ -44,4 +44,9 @@ public class Data implements Serializable {
             return bos.toByteArray();
         }
     }
+
+    @Override
+    public String toString() {
+        return String.format("Key:%s, Value:%s, TS:%s", key, val, timestamp);
+    }
 }

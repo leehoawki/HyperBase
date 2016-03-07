@@ -17,4 +17,9 @@ public class Hint {
         this.offset = offset;
         this.timestamp = timestamp;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Key:%s, File:%s, Offset:%s, TS:%s", key, fileName, offset, timestamp);
+    }
 }

@@ -9,6 +9,7 @@ import hyperbase.meta.MetaStore;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -43,6 +44,13 @@ public class HyperServiceImpl implements HyperService, InitializingBean {
             dataStores.put(meta.getName(), ds);
         }
         LOG.info("DataStores loaded.");
+    }
+
+    @Scheduled(cron = "0 0 * * * ?")
+    void mergeTables() {
+        for (DataStore ds : dataStores.values()) {
+            ds.merge();
+        }
     }
 
     @Override

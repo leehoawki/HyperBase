@@ -1,7 +1,9 @@
 package hyperbase.data;
 
 
-public class Hint {
+import java.io.Serializable;
+
+public class Hint implements Serializable {
 
     String key;
 

@@ -73,14 +73,25 @@ public class DataStoreImpl implements DataStore {
     public synchronized void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
         File dir = new File(meta.getPath());
+        File hf = new File(getHintFilePath());
+        int to = 0;
+        if (hf.exists()) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(hf))) {
+                to = ois.readInt();
+                Map<String, Hint> map = (Map<String, Hint>) ois.readObject();
+                hints.putAll(map);
+            } catch (IOException | ClassNotFoundException ex) {
+                LOG.error(ex);
+                throw new IllegalStateException(ex);
+            }
+        }
+Hi
+        final int t = to;
 
         for (File f : Arrays.stream(dir.listFiles(x -> x.getName().
-                startsWith(fileNamePrefix))).
-                sorted((o1, o2) -> {
-                    String[] a1 = StringUtils.split(o1.getName(), '/');
-                    String[] a2 = StringUtils.split(o2.getName(), '/');
-                    return a1[a1.length - 1].compareTo(a2[a2.length - 1]);
-                }).collect(Collectors.toList())) {
+                startsWith(fileNamePrefix))).filter(x -> !x.getName().endsWith("hints")).
+                sorted((o1, o2) -> getFileSeq(o1.getName()) - getFileSeq(o2.getName())).
+                filter(file -> getFileSeq(file.getName()) >= t).collect(Collectors.toList())) {
             try (FileInputStream fr = new FileInputStream(f)) {
                 int offset = 0;
                 while (true) {
@@ -122,12 +133,8 @@ public class DataStoreImpl implements DataStore {
         try {
             File nf = new File(getMergePath(to, count));
             List<File> files = Arrays.stream(dir.listFiles(x -> x.getName().
-                    startsWith(fileNamePrefix))).
-                    filter(file -> {
-                        String[] a1 = StringUtils.split(file.getName(), '/');
-                        String[] a2 = StringUtils.split(getPath(), '/');
-                        return a1[a1.length - 1].compareTo(a2[a2.length - 1]) < 0;
-                    }).collect(Collectors.toList());
+                    startsWith(fileNamePrefix))).filter(x -> !x.getName().endsWith("hints")).
+                    filter(file -> getFileSeq(file.getName()) <= to).collect(Collectors.toList());
             List<File> toDeleteList = new ArrayList<>();
             FileOutputStream nfos = new FileOutputStream(nf);
             int offset = 0;
@@ -164,6 +171,16 @@ public class DataStoreImpl implements DataStore {
             }
             nfos.close();
             hints.putAll(nhints);
+            File hf = new File(getHintFilePath());
+
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(hf))) {
+                oos.writeInt(to);
+                oos.writeObject(nhints);
+            } catch (IOException ex) {
+                LOG.error(ex);
+                throw new IllegalStateException(ex);
+            }
+
             for (File f : toDeleteList) {
                 f.delete();
             }
@@ -251,12 +268,21 @@ public class DataStoreImpl implements DataStore {
         return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, curr);
     }
 
+    String getHintFilePath() {
+        return String.format("%s/%s.hints", meta.getPath(), fileNamePrefix);
+    }
+
     String getArchivePath(int arch) {
         return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, arch);
     }
 
     String getMergePath(int to, int arch) {
         return String.format("%s/%s.%03d%03d", meta.getPath(), fileNamePrefix, to, arch);
+    }
+
+    int getFileSeq(String fileName) {
+        String[] a = StringUtils.split(fileName, '.');
+        return Integer.valueOf(a[a.length - 1]);
     }
 
     static byte[] intToBytes(int value) {

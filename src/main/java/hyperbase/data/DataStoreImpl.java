@@ -94,20 +94,16 @@ public class DataStoreImpl implements DataStore {
         for (File f : Arrays.stream(dir.listFiles(x -> x.getName().
                 startsWith(fileNamePrefix))).sorted((o1, o2) -> getFileSeq(o1.getName()) - getFileSeq(o2.getName())).
                 filter(file -> getFileSeq(file.getName()) >= t).collect(Collectors.toList())) {
-            try (FileInputStream fr = new FileInputStream(f)) {
+            try (FileInputStream fis = new FileInputStream(f)) {
                 int offset = 0;
                 while (true) {
-                    byte[] bsz = new byte[4];
-                    int re = fr.read(bsz);
-                    if (re != 4) {
+                    byte[] bytes = readData(fis);
+                    if (bytes == null) {
                         break;
                     }
-                    int sz = bytesToInt(bsz);
-                    byte[] bytes = new byte[sz];
-                    fr.read(bytes);
                     Data data = Data.deserialize(bytes);
                     hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), offset, data.timestamp));
-                    offset += 4 + sz;
+                    offset += 4 + bytes.length;
                 }
             } catch (IOException | ClassNotFoundException ex) {
                 LOG.error(String.format("Table %s loading failed.", meta.getName()), ex);
@@ -151,21 +147,17 @@ public class DataStoreImpl implements DataStore {
                     offset = 0;
                 }
                 while (true) {
-                    byte[] bsz = new byte[4];
-                    int re = fis.read(bsz);
-                    if (re != 4) {
+                    byte[] bytes = readData(fis);
+                    if (bytes == null) {
                         break;
                     }
-                    int sz = bytesToInt(bsz);
-                    byte[] bytes = new byte[sz];
-                    fis.read(bytes);
                     Data data = Data.deserialize(bytes);
                     Hint h = hints.get(data.key);
                     if (h.timestamp == data.timestamp && h.fileName.equals(f.getAbsolutePath())) {
                         nhints.put(data.key, new Hint(data.key, nf.getAbsolutePath(), offset, data.timestamp));
-                        nfos.write(bsz);
+                        nfos.write(intToBytes(bytes.length));
                         nfos.write(bytes);
-                        offset += 4 + sz;
+                        offset += 4 + bytes.length;
                     }
                 }
                 fis.close();
@@ -283,6 +275,18 @@ public class DataStoreImpl implements DataStore {
     static int getFileSeq(String fileName) {
         String[] a = StringUtils.split(fileName, '.');
         return Integer.valueOf(a[a.length - 1]);
+    }
+
+    static byte[] readData(FileInputStream fis) throws IOException {
+        byte[] bsz = new byte[4];
+        int re = fis.read(bsz);
+        if (re != 4) {
+            return null;
+        }
+        int sz = bytesToInt(bsz);
+        byte[] bytes = new byte[sz];
+        fis.read(bytes);
+        return bytes;
     }
 
     static byte[] intToBytes(int value) {

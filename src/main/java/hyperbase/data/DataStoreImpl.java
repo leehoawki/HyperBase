@@ -103,7 +103,7 @@ public class DataStoreImpl implements DataStore {
                     }
                     Data data = Data.deserialize(bytes);
                     hints.put(data.key, new Hint(data.key, f.getAbsolutePath(), offset, data.timestamp));
-                    offset += 4 + bytes.length;
+                    offset += INT_SZ + bytes.length;
                 }
             } catch (IOException | ClassNotFoundException ex) {
                 LOG.error(ex);
@@ -157,7 +157,7 @@ public class DataStoreImpl implements DataStore {
                         nhints.put(data.key, new Hint(data.key, nf.getAbsolutePath(), offset, data.timestamp));
                         nfos.write(intToBytes(bytes.length));
                         nfos.write(bytes);
-                        offset += 4 + bytes.length;
+                        offset += INT_SZ + bytes.length;
                     }
                 }
                 fis.close();
@@ -276,9 +276,9 @@ public class DataStoreImpl implements DataStore {
     }
 
     static byte[] readData(FileInputStream fis) throws IOException {
-        byte[] bsz = new byte[4];
+        byte[] bsz = new byte[INT_SZ];
         int re = fis.read(bsz);
-        if (re != 4) {
+        if (re != INT_SZ) {
             return null;
         }
         int sz = bytesToInt(bsz);
@@ -286,6 +286,8 @@ public class DataStoreImpl implements DataStore {
         fis.read(bytes);
         return bytes;
     }
+
+    static final int INT_SZ = 4;
 
     static byte[] intToBytes(int value) {
         byte[] src = new byte[4];

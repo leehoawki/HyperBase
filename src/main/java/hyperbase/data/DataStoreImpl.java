@@ -17,11 +17,13 @@ public class DataStoreImpl implements DataStore {
 
     static Logger LOG = Logger.getLogger(DataStoreImpl.class);
 
-    Map<String, Hint> hints;
+    final Map<String, Hint> hints;
 
-    Meta meta;
+    final Meta meta;
 
-    String fileNamePrefix;
+    final String fileNamePrefix;
+
+    final String hintsFilePath;
 
     FileOutputStream fos;
 
@@ -35,6 +37,7 @@ public class DataStoreImpl implements DataStore {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<>();
         this.fileNamePrefix = String.format("hyper.data.%s", meta.getName());
+        this.hintsFilePath = String.format("%s/hyper.hints.%s", meta.getPath(), meta.getName());
     }
 
     @Override
@@ -73,7 +76,7 @@ public class DataStoreImpl implements DataStore {
     public synchronized void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
         File dir = new File(meta.getPath());
-        File hf = new File(getHintFilePath());
+        File hf = new File(hintsFilePath);
         int to = 0;
         if (hf.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(hf))) {
@@ -85,12 +88,11 @@ public class DataStoreImpl implements DataStore {
                 throw new IllegalStateException(ex);
             }
         }
-Hi
+
         final int t = to;
 
         for (File f : Arrays.stream(dir.listFiles(x -> x.getName().
-                startsWith(fileNamePrefix))).filter(x -> !x.getName().endsWith("hints")).
-                sorted((o1, o2) -> getFileSeq(o1.getName()) - getFileSeq(o2.getName())).
+                startsWith(fileNamePrefix))).sorted((o1, o2) -> getFileSeq(o1.getName()) - getFileSeq(o2.getName())).
                 filter(file -> getFileSeq(file.getName()) >= t).collect(Collectors.toList())) {
             try (FileInputStream fr = new FileInputStream(f)) {
                 int offset = 0;
@@ -133,8 +135,7 @@ Hi
         try {
             File nf = new File(getMergePath(to, count));
             List<File> files = Arrays.stream(dir.listFiles(x -> x.getName().
-                    startsWith(fileNamePrefix))).filter(x -> !x.getName().endsWith("hints")).
-                    filter(file -> getFileSeq(file.getName()) <= to).collect(Collectors.toList());
+                    startsWith(fileNamePrefix))).filter(file -> getFileSeq(file.getName()) <= to).collect(Collectors.toList());
             List<File> toDeleteList = new ArrayList<>();
             FileOutputStream nfos = new FileOutputStream(nf);
             int offset = 0;
@@ -171,7 +172,7 @@ Hi
             }
             nfos.close();
             hints.putAll(nhints);
-            File hf = new File(getHintFilePath());
+            File hf = new File(hintsFilePath);
 
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(hf))) {
                 oos.writeInt(to);
@@ -198,6 +199,7 @@ Hi
         for (File f : dir.listFiles(x -> x.getName().startsWith(fileNamePrefix))) {
             f.delete();
         }
+        new File(hintsFilePath).delete();
         LOG.info(String.format("Table %s destroy completed.", meta.getName()));
     }
 
@@ -254,6 +256,7 @@ Hi
     }
 
     synchronized void archive() {
+        LOG.info(String.format("Table %s archiving in progress...", meta.getName()));
         curr += 1;
         try {
             fos.close();
@@ -262,14 +265,11 @@ Hi
             LOG.error(ex);
             throw new IllegalStateException(ex);
         }
+        LOG.info(String.format("Table %s archiving completed.", meta.getName()));
     }
 
     String getPath() {
         return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, curr);
-    }
-
-    String getHintFilePath() {
-        return String.format("%s/%s.hints", meta.getPath(), fileNamePrefix);
     }
 
     String getArchivePath(int arch) {
@@ -280,7 +280,7 @@ Hi
         return String.format("%s/%s.%03d%03d", meta.getPath(), fileNamePrefix, to, arch);
     }
 
-    int getFileSeq(String fileName) {
+    static int getFileSeq(String fileName) {
         String[] a = StringUtils.split(fileName, '.');
         return Integer.valueOf(a[a.length - 1]);
     }

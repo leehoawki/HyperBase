@@ -50,7 +50,7 @@ public class MetaStoreImpl implements MetaStore {
             }
 
         } catch (ConfigurationException | IOException ex) {
-            LOG.error(String.format("Meta file initialization failed %s.", filePath), ex);
+            LOG.error(ex);
             throw new IllegalStateException(ex);
         }
 
@@ -108,7 +108,7 @@ public class MetaStoreImpl implements MetaStore {
         try {
             pc.save();
         } catch (ConfigurationException ex) {
-            LOG.error(String.format("Meta file saving failed %s.", filePath), ex);
+            LOG.error(ex);
             throw new IllegalStateException(ex);
         }
     }

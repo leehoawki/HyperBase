@@ -106,7 +106,7 @@ public class DataStoreImpl implements DataStore {
                     offset += 4 + bytes.length;
                 }
             } catch (IOException | ClassNotFoundException ex) {
-                LOG.error(String.format("Table %s loading failed.", meta.getName()), ex);
+                LOG.error(ex);
                 throw new IllegalStateException(ex);
             }
         }
@@ -174,9 +174,7 @@ public class DataStoreImpl implements DataStore {
                 throw new IllegalStateException(ex);
             }
 
-            for (File f : toDeleteList) {
-                f.delete();
-            }
+            toDeleteList.forEach(File::delete);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.error(ex);
             throw new IllegalStateException(ex);
@@ -221,7 +219,7 @@ public class DataStoreImpl implements DataStore {
                 fos.write(intToBytes(cell.length));
                 fos.write(cell);
             } catch (IOException ex) {
-                LOG.error(String.format("Error setting %s to file %s", data.key, meta.getPath()), ex);
+                LOG.error(ex);
                 throw new IllegalStateException(ex);
             }
         });
@@ -242,7 +240,7 @@ public class DataStoreImpl implements DataStore {
             file.read(data);
             return Data.deserialize(data);
         } catch (IOException | ClassNotFoundException ex) {
-            LOG.error(String.format("Error getting %s from file %s", hint.key, hint.fileName), ex);
+            LOG.error(ex);
             throw new IllegalStateException(ex);
         }
     }
@@ -306,7 +304,6 @@ public class DataStoreImpl implements DataStore {
                 | (src[3] & 0xFF);
         return value;
     }
-
 
     static final int FILE_SZ = 20 * 1024 * 1024;
 }

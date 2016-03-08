@@ -147,4 +147,36 @@ public class DataStoreImplTest extends TestCase {
         assertEquals(store.get("6").getVal(), "H");
         assertEquals(store.get("7").getVal(), "I");
     }
+
+    @Test
+    public void testMergeAndRestore() {
+        store.set("1", "A");
+        store.set("2", "B");
+        store.set("3", "C");
+        store.offline();
+        store.online();
+        store.archive();
+        store.set("1", "D");
+        store.set("2", "E");
+        store.set("4", "F");
+        store.offline();
+        store.online();
+        store.archive();
+        store.set("5", "G");
+        store.set("6", "H");
+        store.set("7", "I");
+        store.offline();
+        store.merge();
+
+        DataStore store2 = sdf.restoreStore(meta);
+        assertEquals(store.get("1").getVal(), "D");
+        assertEquals(store.get("2").getVal(), "E");
+        assertEquals(store.get("3").getVal(), "C");
+        assertEquals(store.get("4").getVal(), "F");
+        assertEquals(store.get("5").getVal(), "G");
+        assertEquals(store.get("6").getVal(), "H");
+        assertEquals(store.get("7").getVal(), "I");
+        store2.offline();
+        store2.destroy();
+    }
 }

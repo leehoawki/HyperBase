@@ -77,7 +77,7 @@ public class DataStoreImpl implements DataStore {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
         File dir = new File(meta.getPath());
         File hf = new File(hintsFilePath);
-        int to = 0;
+        int to = -1;
         if (hf.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(hf))) {
                 to = ois.readInt();
@@ -93,7 +93,7 @@ public class DataStoreImpl implements DataStore {
 
         for (File f : Arrays.stream(dir.listFiles(x -> x.getName().
                 startsWith(fileNamePrefix))).sorted((o1, o2) -> getFileSeq(o1.getName()) - getFileSeq(o2.getName())).
-                filter(file -> getFileSeq(file.getName()) >= t).collect(Collectors.toList())) {
+                filter(file -> getFileSeq(file.getName()) > t).collect(Collectors.toList())) {
             try (FileInputStream fis = new FileInputStream(f)) {
                 int offset = 0;
                 while (true) {

@@ -1,33 +1,22 @@
 package hyperbase.meta;
 
 
-public class Meta {
-    String name;
+public final class Meta {
+    final String name;
 
-    String path;
+    final String dir;
 
-    public Meta() {
-
-    }
-
-    public Meta(String name, String path) {
+    public Meta(String name, String dir) {
         this.name = name;
-        this.path = path;
+        this.dir = dir;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
+    public String getDir() {
+        return dir;
     }
 }

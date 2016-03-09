@@ -37,7 +37,7 @@ public class DataStoreImpl implements DataStore {
         this.meta = meta;
         this.hints = new ConcurrentHashMap<>();
         this.fileNamePrefix = String.format("hyper.data.%s", meta.getName());
-        this.hintsFilePath = String.format("%s/hyper.hints.%s", meta.getPath(), meta.getName());
+        this.hintsFilePath = String.format("%s/hyper.hints.%s", meta.getDir(), meta.getName());
     }
 
     @Override
@@ -75,7 +75,7 @@ public class DataStoreImpl implements DataStore {
     @Override
     public synchronized void restore() {
         LOG.info(String.format("Table %s loading in progress...", meta.getName()));
-        File dir = new File(meta.getPath());
+        File dir = new File(meta.getDir());
         File hf = new File(hintsFilePath);
         int to = -1;
         if (hf.exists()) {
@@ -125,7 +125,7 @@ public class DataStoreImpl implements DataStore {
             return;
         }
 
-        File dir = new File(meta.getPath());
+        File dir = new File(meta.getDir());
         Map<String, Hint> nhints = new HashMap<>();
         int count = 1;
         try {
@@ -140,8 +140,7 @@ public class DataStoreImpl implements DataStore {
                 toDeleteList.add(f);
                 FileInputStream fis = new FileInputStream(f);
                 if (nf.length() > FILE_SZ) {
-                    count += 1;
-                    nf = new File(getMergePath(to, count));
+                    nf = new File(getMergePath(to, ++count));
                     nfos.close();
                     nfos = new FileOutputStream(nf);
                     offset = 0;
@@ -185,7 +184,7 @@ public class DataStoreImpl implements DataStore {
     @Override
     public synchronized void destroy() {
         LOG.info(String.format("Table %s destroy in progress...", meta.getName()));
-        File dir = new File(meta.getPath());
+        File dir = new File(meta.getDir());
         for (File f : dir.listFiles(x -> x.getName().startsWith(fileNamePrefix))) {
             f.delete();
         }
@@ -259,15 +258,15 @@ public class DataStoreImpl implements DataStore {
     }
 
     String getPath() {
-        return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, curr);
+        return String.format("%s/%s.%03d000", meta.getDir(), fileNamePrefix, curr);
     }
 
     String getArchivePath(int arch) {
-        return String.format("%s/%s.%03d000", meta.getPath(), fileNamePrefix, arch);
+        return String.format("%s/%s.%03d000", meta.getDir(), fileNamePrefix, arch);
     }
 
     String getMergePath(int to, int arch) {
-        return String.format("%s/%s.%03d%03d", meta.getPath(), fileNamePrefix, to, arch);
+        return String.format("%s/%s.%03d%03d", meta.getDir(), fileNamePrefix, to, arch);
     }
 
     static int getFileSeq(String fileName) {
@@ -308,4 +307,27 @@ public class DataStoreImpl implements DataStore {
     }
 
     static final int FILE_SZ = 20 * 1024 * 1024;
+
+    static final class Hint implements Serializable {
+
+        final String key;
+
+        final String fileName;
+
+        final long offset;
+
+        final long timestamp;
+
+        public Hint(String key, String name, long offset, long timestamp) {
+            this.key = key;
+            this.fileName = name;
+            this.offset = offset;
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Key:%s, File:%s, Offset:%s, TS:%s", key, fileName, offset, timestamp);
+        }
+    }
 }

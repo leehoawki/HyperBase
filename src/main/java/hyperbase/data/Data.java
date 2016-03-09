@@ -3,13 +3,13 @@ package hyperbase.data;
 
 import java.io.*;
 
-public class Data implements Serializable {
+public final class Data implements Serializable {
 
-    String key;
+    final String key;
 
-    String val;
+    final String val;
 
-    long timestamp;
+    final long timestamp;
 
     public Data(String key, String val, long timestamp) {
         this.key = key;

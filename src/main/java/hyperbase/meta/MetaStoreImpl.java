@@ -73,7 +73,7 @@ public class MetaStoreImpl implements MetaStore {
         }
 
         metas.put(meta.getName(), meta);
-        tc.addProperty(meta.getName(), meta.getPath());
+        tc.addProperty(meta.getName(), meta.getDir());
         save();
         LOG.info(String.format("Table %s created.", name));
     }

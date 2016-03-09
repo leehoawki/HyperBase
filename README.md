@@ -1,10 +1,6 @@
 # HyperBase
 
-
-![UNDER CONSTRUCTION](http://ocp.sparwood.ca/wp-content/uploads/2013/12/Under-construction.jpg)
-
 ## Overview
-
 A zero configuration key-value store that runs in a servlet container using Bitcask as the storage model.
 
 ![Datafiles](http://pic.yupoo.com/iammutex/BwqvS7Fs/wlJ3W.jpg)
@@ -28,7 +24,6 @@ Copy the war into Tomcat or any other servlet container you like and start it. O
 Visit [http://localhost:8080/HyperBase](http://localhost:8080/HyperBase) and you should see the Admin page. 
 
 ## API
-
 HyperBase provides a RESTful API that allows to query data using GET and update/delete data using POST in the repositories. 
 
 ##### List tables

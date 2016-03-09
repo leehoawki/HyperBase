@@ -1,6 +1,5 @@
 # HyperBase
 
-## Overview
 A zero configuration key-value store that runs in a servlet container using Bitcask as the storage model.
 
 ![Datafiles](http://pic.yupoo.com/iammutex/BwqvS7Fs/wlJ3W.jpg)
@@ -10,7 +9,6 @@ Updates will get handled by service module and append into the datafiles directl
 Queries will check the index in the memory first and then visit the position of the data files on disk to get the lastest data. After crash or shutdown, it will restore itself and try to recreate the index in memory using all the data files on disk.
 
 ## Building and Running
-
 To build this project, you must have Maven and Jdk(1.8) installed.
 
     git clone https://github.com/leehoawki/HyperBase.git
@@ -24,7 +22,7 @@ Copy the war into Tomcat or any other servlet container you like and start it. O
 Visit [http://localhost:8080/HyperBase](http://localhost:8080/HyperBase) and you should see the Admin page. 
 
 ## API
-HyperBase provides a RESTful API that allows to query data using GET and update/delete data using POST in the repositories. 
+HyperBase provides a RESTful API that allows to query data using GET and update/delete data using POST in the repositories.
 
 ##### List tables
     GET:/api/tables

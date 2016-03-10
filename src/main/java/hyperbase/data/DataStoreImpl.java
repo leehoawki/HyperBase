@@ -45,7 +45,7 @@ public class DataStoreImpl implements DataStore {
         if (!online) {
             try {
                 es = Executors.newSingleThreadExecutor();
-                fos = new FileOutputStream(getPath(), true);
+                fos = new FileOutputStream(getFilePath(fileNamePrefix, meta.getDir(), curr), true);
             } catch (IOException ex) {
                 LOG.error(ex);
                 throw new IllegalStateException(ex);
@@ -121,7 +121,7 @@ public class DataStoreImpl implements DataStore {
             return;
         }
         int to = curr - 1;
-        if (!new File(getArchivePath(to)).exists()) {
+        if (!new File(getFilePath(fileNamePrefix, meta.getDir(), to)).exists()) {
             return;
         }
 
@@ -129,7 +129,7 @@ public class DataStoreImpl implements DataStore {
         Map<String, Hint> nhints = new HashMap<>();
         int count = 1;
         try {
-            File nf = new File(getMergePath(to, count));
+            File nf = new File(getFilePath(fileNamePrefix, meta.getDir(), to, count));
             List<File> files = Arrays.stream(dir.listFiles(x -> x.getName().
                     startsWith(fileNamePrefix))).filter(file -> getFileSeq(file.getName()) <= to).collect(Collectors.toList());
             List<File> toDeleteList = new ArrayList<>();
@@ -138,28 +138,28 @@ public class DataStoreImpl implements DataStore {
 
             for (File f : files) {
                 toDeleteList.add(f);
-                FileInputStream fis = new FileInputStream(f);
-                if (nf.length() > FILE_SZ) {
-                    nf = new File(getMergePath(to, ++count));
-                    nfos.close();
-                    nfos = new FileOutputStream(nf);
-                    offset = 0;
-                }
-                while (true) {
-                    byte[] bytes = readData(fis);
-                    if (bytes == null) {
-                        break;
+                try (FileInputStream fis = new FileInputStream(f)) {
+                    if (nf.length() > FILE_SZ) {
+                        nf = new File(getFilePath(fileNamePrefix, meta.getDir(), to, ++count));
+                        nfos.close();
+                        nfos = new FileOutputStream(nf);
+                        offset = 0;
                     }
-                    Data data = Data.deserialize(bytes);
-                    Hint h = hints.get(data.key);
-                    if (h.timestamp == data.timestamp && h.fileName.equals(f.getAbsolutePath())) {
-                        nhints.put(data.key, new Hint(data.key, nf.getAbsolutePath(), offset, data.timestamp));
-                        nfos.write(intToBytes(bytes.length));
-                        nfos.write(bytes);
-                        offset += INT_SZ + bytes.length;
+                    while (true) {
+                        byte[] bytes = readData(fis);
+                        if (bytes == null) {
+                            break;
+                        }
+                        Data data = Data.deserialize(bytes);
+                        Hint h = hints.get(data.key);
+                        if (h.timestamp == data.timestamp && h.fileName.equals(f.getAbsolutePath())) {
+                            nhints.put(data.key, new Hint(data.key, nf.getAbsolutePath(), offset, data.timestamp));
+                            nfos.write(intToBytes(bytes.length));
+                            nfos.write(bytes);
+                            offset += INT_SZ + bytes.length;
+                        }
                     }
                 }
-                fis.close();
             }
             nfos.close();
             hints.putAll(nhints);
@@ -202,13 +202,13 @@ public class DataStoreImpl implements DataStore {
     @Override
     public void set(Data data) {
         es.execute(() -> {
-            File f = new File(getPath());
+            File f = new File(getFilePath(fileNamePrefix, meta.getDir(), curr));
             if (f.length() > FILE_SZ) {
                 synchronized (this) {
-                    f = new File(getPath());
+                    f = new File(getFilePath(fileNamePrefix, meta.getDir(), curr));
                     if (f.length() > FILE_SZ) {
                         archive();
-                        f = new File(getPath());
+                        f = new File(getFilePath(fileNamePrefix, meta.getDir(), curr));
                     }
                 }
             }
@@ -249,7 +249,7 @@ public class DataStoreImpl implements DataStore {
         curr += 1;
         try {
             fos.close();
-            fos = new FileOutputStream(getPath(), true);
+            fos = new FileOutputStream(getFilePath(fileNamePrefix, meta.getDir(), curr), true);
         } catch (IOException ex) {
             LOG.error(ex);
             throw new IllegalStateException(ex);
@@ -257,21 +257,17 @@ public class DataStoreImpl implements DataStore {
         LOG.info(String.format("Table %s archiving completed.", meta.getName()));
     }
 
-    String getPath() {
-        return String.format("%s/%s.%03d000", meta.getDir(), fileNamePrefix, curr);
+    static String getFilePath(String fileNamePrefix, String dir, int n) {
+        return getFilePath(fileNamePrefix, dir, n, 0);
     }
 
-    String getArchivePath(int arch) {
-        return String.format("%s/%s.%03d000", meta.getDir(), fileNamePrefix, arch);
-    }
-
-    String getMergePath(int to, int arch) {
-        return String.format("%s/%s.%03d%03d", meta.getDir(), fileNamePrefix, to, arch);
+    static String getFilePath(String fileNamePrefix, String dir, int to, int arch) {
+        return String.format("%s/%s.%03d%03d", dir, fileNamePrefix, to, arch);
     }
 
     static int getFileSeq(String fileName) {
         String[] a = StringUtils.split(fileName, '.');
-        return Integer.valueOf(a[a.length - 1]);
+        return Integer.parseInt(a[a.length - 1]);
     }
 
     static byte[] readData(FileInputStream fis) throws IOException {

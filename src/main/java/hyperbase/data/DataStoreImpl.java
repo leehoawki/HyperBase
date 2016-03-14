@@ -128,11 +128,12 @@ public class DataStoreImpl implements DataStore {
         File dir = new File(meta.getDir());
         Map<String, Hint> nhints = new HashMap<>();
         int count = 1;
+        DataOutputStream ndos = null;
         try {
             List<File> files = Arrays.stream(dir.listFiles(x -> x.getName().
                     startsWith(fileNamePrefix))).filter(file -> getFileSeq(file.getName()) <= to).collect(Collectors.toList());
             List<File> toDeleteList = new ArrayList<>();
-            DataOutputStream ndos = new DataOutputStream(getFilePath(fileNamePrefix, meta.getDir(), to, count));
+            ndos = new DataOutputStream(getFilePath(fileNamePrefix, meta.getDir(), to, count));
             int offset = 0;
 
             for (File f : files) {
@@ -171,6 +172,9 @@ public class DataStoreImpl implements DataStore {
 
             toDeleteList.forEach(File::delete);
         } catch (IOException | ClassNotFoundException ex) {
+            if (ndos != null) {
+                ndos.clean();
+            }
             LOG.error(ex);
             throw new IllegalStateException(ex);
         }
@@ -327,6 +331,8 @@ public class DataStoreImpl implements DataStore {
 
         boolean append;
 
+        List<File> files;
+
         public DataOutputStream(String path) throws IOException {
             this(path, false);
         }
@@ -336,6 +342,7 @@ public class DataStoreImpl implements DataStore {
             this.file = new File(path);
             this.fos = new FileOutputStream(path, append);
             this.append = append;
+            this.files.add(file);
         }
 
         public void write(byte[] bytes) throws IOException {
@@ -351,6 +358,11 @@ public class DataStoreImpl implements DataStore {
             this.file = new File(newPath);
             this.fos.close();
             this.fos = new FileOutputStream(path, append);
+            this.files.add(file);
+        }
+
+        public void clean() {
+            files.forEach(File::delete);
         }
     }
 }

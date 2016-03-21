@@ -43,10 +43,4 @@ HyperBase provides a RESTful API that allows to query data using GET and update/
     Content-Type:application/json
     data = [val]
 
-Data will get removed after being updated as an empty string.
-
-
-
-
-
 

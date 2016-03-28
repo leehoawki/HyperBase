@@ -9,7 +9,7 @@ Updates will get handled by service module and append into the datafiles directl
 Queries will check the index in the memory first and then visit the position of the data files on disk to get the lastest data. After crash or shutdown, it will restore itself and try to recreate the index in memory using all the data files on disk.
 
 ## Building and Running
-To build this project, you must have Maven and Jdk(1.8) installed.
+To build this project, you must have Maven3 and Java8 installed.
 
     git clone https://github.com/leehoawki/HyperBase.git
     cd HyperBase

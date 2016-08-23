@@ -331,7 +331,7 @@ public class DataStoreImpl implements DataStore {
 
         boolean append;
 
-        List<File> files;
+        List<File> files = new ArrayList<>();
 
         public DataOutputStream(String path) throws IOException {
             this(path, false);
